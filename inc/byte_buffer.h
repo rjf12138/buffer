@@ -9,15 +9,16 @@ namespace my_util {
 #define MAX_STRING_SIZE     512
 #define MAX_BUFFER_SIZE     1*1024*1024*1024
 
-typedef int64_t BUFSIZE_T;
-typedef uint64_t UNBUFSIZE_T;
-typedef vector<int8_t> BUFFTYPE_T;
+typedef int64_t     BUFSIZE_T;
+typedef uint64_t    UNBUFSIZE_T;
+typedef int8_t      BUFFER_TYPE;
+typedef int8_t*     BUFFER_PTR;
 
 class ByteBuffer_Iterator;
 class ByteBuffer {
     friend class ByteBuffer_Iterator;
 public:
-    ByteBuffer(BUFSIZE_T max_buffer_size = 2);
+    ByteBuffer(BUFSIZE_T size = 0);
     virtual ~ByteBuffer();
 
     int read_only_int8(int8_t &val) {return 0;}
@@ -64,11 +65,13 @@ public:
     int write_int32_hton(const int32_t &val);
 
     bool empty(void) const;
-    int data_size(void) const;
-    int idle_size(void) const;
-    int clear(void);
-    // 重新分配缓冲区大小(只能向上增长),minsize表示重新分配缓冲区的下限
-    int resize(BUFSIZE_T min_size);
+    BUFSIZE_T data_size(void) const;
+    BUFSIZE_T idle_size(void) const;
+    BUFSIZE_T clear(void);
+    BUFSIZE_T set_extern_buffer(BUFFER_PTR exbuf, int buff_size);
+
+    // 重新分配缓冲区大小(只能向上增长), size表示重新分配缓冲区的下限
+    BUFSIZE_T resize(BUFSIZE_T size);
     
     // 返回起始结束迭代器
     ByteBuffer_Iterator begin(void) const;
@@ -92,13 +95,13 @@ private:
     BUFSIZE_T copy_data_from_buffer(void *data, BUFSIZE_T size);
 
 private:
-    BUFFTYPE_T buffer_; // 修改为shared_ptr<int8_t>指针来修改
+    BUFFER_PTR buffer_;
     Mutex lock_;
 
     BUFSIZE_T start_read_pos_;
     BUFSIZE_T start_write_pos_;
 
-    BUFSIZE_T data_size_;
+    BUFSIZE_T data_size_ = 0;
     BUFSIZE_T max_buffer_size_;
 
     shared_ptr<ByteBuffer_Iterator> bytebuff_iter_start_;
