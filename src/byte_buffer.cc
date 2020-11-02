@@ -17,6 +17,22 @@ ByteBuffer::ByteBuffer(BUFSIZE_T size)
     }
 }
 
+ByteBuffer::ByteBuffer(const ByteBuffer &buff)
+{
+    start_read_pos_ = buff.start_read_pos_;
+    start_write_pos_ = buff.start_write_pos_;
+    data_size_ = buff.data_size_;
+    max_buffer_size_ = buff.max_buffer_size_;
+
+    if (buff.buffer_ != nullptr && buff.max_buffer_size_ > 0) {
+        buffer_ = new BUFFER_TYPE[buff.max_buffer_size_];
+        memmove(buffer_, buff.buffer_, buff.max_buffer_size_);
+    } else {
+        buffer_ = nullptr;
+        max_buffer_size_ = 0;
+    }
+}
+
 ByteBuffer::~ByteBuffer()
 {
     this->clear();
@@ -25,14 +41,14 @@ ByteBuffer::~ByteBuffer()
 BUFSIZE_T ByteBuffer::clear(void)
 {
     if (buffer_ != nullptr) {
-        pthread_t pid = pthread_self();
-        printf("buff_addr: 0x%lx, thread_id: %ld, free_addr: 0x%lx\n", (int64_t)this, pid, (int64_t)buffer_);
         delete[] buffer_;
+        buffer_ = nullptr;
     }
 
     data_size_ = 0;
     start_read_pos_ = 0;
     start_write_pos_ = 0;
+    max_buffer_size_ = 0;
 
     return 0;
 }
@@ -91,9 +107,7 @@ ByteBuffer::resize(BUFSIZE_T size)
     BUFSIZE_T new_size = (2*size) <= MAX_BUFFER_SIZE ? 2 * size : MAX_BUFFER_SIZE;
     BUFFER_PTR new_buffer = new BUFFER_TYPE[new_size];
 
-    ByteBuffer tmp_buf;
-    tmp_buf = *this;
-    printf("tmp_buf: 0x%lx, this: 0x%lx\n", (int64_t)&tmp_buf, (int64_t)this);
+    ByteBuffer tmp_buf = *this;
     this->set_extern_buffer(new_buffer, new_size);
     for (auto iter = tmp_buf.begin(); iter != tmp_buf.end(); ++iter) {
         this->write_int8(*iter);
@@ -130,13 +144,7 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
         return -1;
     }
 
-    int ret = this->idle_size();
-    std::cout << "max_buffer_size_: " << max_buffer_size_ << std::endl;
-    std::cout << "data_size_: " << data_size_ << std::endl;
-    std::cout << "this->idle_size: " << this->idle_size() << std::endl;
     if (this->idle_size() <= size) {
-        cout << "ret: " << ret << endl;
-        cout << "size: " << size << endl;
         int ret = this->resize(max_buffer_size_ + size);
         if (ret == -1) {
            return -1;
@@ -499,14 +507,18 @@ ByteBuffer&
 ByteBuffer::operator=(const ByteBuffer& src)
 {
     this->clear();
-    buffer_ = new BUFFER_TYPE[src.max_buffer_size_];
-    printf("this: 0x%lx, new_buffer: 0x%lx", (int64_t)this, (int64_t)buffer_);
-    memmove(buffer_, src.buffer_, src.max_buffer_size_);
+
     start_read_pos_ = src.start_read_pos_;
     start_write_pos_ = src.start_write_pos_;
     data_size_ = src.data_size_;
     max_buffer_size_ = src.max_buffer_size_;
 
+    if (src.buffer_ != nullptr && src.max_buffer_size_ > 0) {
+        buffer_ = new BUFFER_TYPE[src.max_buffer_size_];
+        memmove(buffer_, src.buffer_, src.max_buffer_size_);
+    } else {
+        buffer_ = nullptr;
+    }
     return *this;
 }
 

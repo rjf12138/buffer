@@ -19,6 +19,7 @@ class ByteBuffer {
     friend class ByteBuffer_Iterator;
 public:
     ByteBuffer(BUFSIZE_T size = 0);
+    ByteBuffer(const ByteBuffer &buff);
     virtual ~ByteBuffer();
 
     int read_only_int8(int8_t &val) {return 0;}
