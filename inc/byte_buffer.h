@@ -84,6 +84,18 @@ public:
     friend bool operator!=(const ByteBuffer &lhs, const ByteBuffer &rhs);
     ByteBuffer& operator=(const ByteBuffer& src);
 
+    // 向外面直接提供 buffer_ 指针，它们写是直接写入指针，避免不必要的拷贝
+    BUFFER_PTR get_write_buffer_ptr(void) const;
+    BUFFER_PTR get_read_buffer_ptr(void) const;
+
+    // ByteBuffer 是循环队列，读写不一定是连续的
+    BUFSIZE_T get_cont_write_size(void) const;
+    BUFSIZE_T get_cont_read_size(void) const;
+
+    // 更新读写数据和剩余的缓冲大小
+    void update_write_pos(BUFSIZE_T offset);
+    void update_read_pos(BUFSIZE_T offset);
+
 private:
     // 下一个读的位置
     void next_read_pos(int offset = 1);

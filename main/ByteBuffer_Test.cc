@@ -307,7 +307,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
     }
 }
 
-#define TEST_THREAD_NUM 2
+#define TEST_THREAD_NUM 1000
 #define TEST_COUNT 8000
 
 TEST_F(ByteBuffer_Test, mutil_thread_read_write)

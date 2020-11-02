@@ -153,18 +153,17 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 
     BUFFER_PTR data_ptr = (BUFFER_PTR)data;
     // 检查buff数组后面是否有连续的内存可以写
-    BUFSIZE_T remain = max_buffer_size_ - start_write_pos_;
-    if (remain >= size) {    // 有足够的空间，那直接拷贝
-        memmove(buffer_ + start_write_pos_, data_ptr, size);
-        this->next_write_pos(size);
-    } else {
-        memmove(buffer_ + start_write_pos_, data_ptr, remain);
-        this->next_write_pos(remain); // 将buff最后的空间写满
-        memmove(buffer_ + start_write_pos_, data_ptr + remain, size - remain);
-        this->next_write_pos(size - remain); // 从buff开头在将剩余的数据写入
-    }
+    while (true)
+    {
+        BUFSIZE_T write_size = this->get_cont_write_size() > size ? size : this->get_cont_write_size();
+        memmove(this->get_write_buffer_ptr(), data_ptr, write_size);
+        this->update_write_pos(write_size);
 
-    data_size_ += size; // 更新buff内的数据个数
+        size -= write_size;
+        if (size <= 0 || this->idle_size() == 0) {
+            break;
+        }
+    }
     
 
     return size;
@@ -184,19 +183,18 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
 
     BUFFER_PTR data_ptr = (BUFFER_PTR)data;
     // 检查buff数组后面是否有连续的内存可以读
-    BUFSIZE_T end_point = start_read_pos_ > start_write_pos_ ? max_buffer_size_ : start_write_pos_;
-    BUFSIZE_T remain = end_point - start_read_pos_;
-    if (remain >= size) {    // 有足够的空间，那直接拷贝
-        memmove(data_ptr, buffer_ + start_read_pos_, size);
-        this->next_read_pos(size);
-    } else {
-        memmove(data_ptr, buffer_ + start_read_pos_, remain);
-        this->next_read_pos(remain); // 将buff最后的空间读取
-        memmove(data_ptr + remain, buffer_, size - remain);
-        this->next_read_pos(size - remain); // 从buff开头在将剩余的数据读取
+    while (true)
+    {
+        BUFSIZE_T read_size = this->get_cont_read_size() > size ? size : this->get_cont_read_size();
+        memmove(data_ptr, this->get_read_buffer_ptr(), read_size);
+        this->update_read_pos(read_size);
+
+        size -= read_size;
+        if (size <= 0 || this->data_size() == 0) {
+            break;
+        }
     }
 
-    data_size_ -= size; // 更新buff内的数据个数
     return size;
 }
 
@@ -520,6 +518,76 @@ ByteBuffer::operator=(const ByteBuffer& src)
         buffer_ = nullptr;
     }
     return *this;
+}
+
+BUFFER_PTR 
+ByteBuffer::get_write_buffer_ptr(void) const
+{
+    return buffer_ + start_write_pos_;
+}
+
+BUFFER_PTR 
+ByteBuffer::get_read_buffer_ptr(void) const
+{
+    return buffer_ + start_read_pos_;
+}
+
+BUFSIZE_T 
+ByteBuffer::get_cont_write_size(void) const
+{
+    if (this->idle_size() <= 0) {
+        return 0;
+    }
+
+    if (start_read_pos_ >= start_write_pos_) {
+        return this->idle_size();
+    } else if (start_read_pos_ <= start_write_pos_) {
+        return max_buffer_size_ - start_write_pos_;
+    }
+
+    return 0;
+}
+
+BUFSIZE_T 
+ByteBuffer::get_cont_read_size(void) const
+{
+    if (data_size_ <= 0) {
+        return 0;
+    }
+
+    if (start_read_pos_ > start_write_pos_) {
+        return max_buffer_size_ - start_read_pos_;
+    } else if (start_write_pos_ > start_read_pos_) {
+        return data_size_;
+    }
+
+    return 0;
+}
+
+void 
+ByteBuffer::update_write_pos(BUFSIZE_T offset)
+{
+    if (offset <= 0 || offset > this->idle_size()) {
+        return ;
+    }
+
+    data_size_ += offset;
+    start_write_pos_ = (start_write_pos_ + offset) % max_buffer_size_;
+
+    return ;
+}
+
+void 
+ByteBuffer::update_read_pos(BUFSIZE_T offset)
+{
+    if (offset <= 0 || offset > this->data_size()) {
+        return ;
+    }
+
+    data_size_ -= offset;
+    start_read_pos_ = (start_read_pos_ + offset) % max_buffer_size_;
+
+    return ;
 }
 
 }
