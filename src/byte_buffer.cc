@@ -91,8 +91,9 @@ BUFSIZE_T ByteBuffer::data_size(void) const
 
 BUFSIZE_T ByteBuffer::idle_size() const 
 {
-    
-    return (max_buffer_size_ - data_size_);
+    // -1 是为了留出一位，防止写满和为空的时候，
+    // start_write和start_read都指向同一个位置，无法辨认
+    return (max_buffer_size_ == 0 ? 0 : max_buffer_size_ - data_size_ - 1);
 }
 
 BUFSIZE_T 
@@ -104,7 +105,7 @@ ByteBuffer::resize(BUFSIZE_T size)
         return -1;
     }
 
-    BUFSIZE_T new_size = (2*size) <= MAX_BUFFER_SIZE ? 2 * size : MAX_BUFFER_SIZE;
+    BUFSIZE_T new_size = (2*size) <= MAX_BUFFER_SIZE ? 2 * size : MAX_BUFFER_SIZE + 1;
     BUFFER_PTR new_buffer = new BUFFER_TYPE[new_size];
 
     ByteBuffer tmp_buf = *this;
@@ -151,22 +152,25 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
         }
     }
 
+    BUFSIZE_T copy_size = size;
     BUFFER_PTR data_ptr = (BUFFER_PTR)data;
+    
     // 检查buff数组后面是否有连续的内存可以写
     while (true)
     {
-        BUFSIZE_T write_size = this->get_cont_write_size() > size ? size : this->get_cont_write_size();
+        BUFSIZE_T write_size = this->get_cont_write_size() > copy_size ? copy_size : this->get_cont_write_size();
         memmove(this->get_write_buffer_ptr(), data_ptr, write_size);
         this->update_write_pos(write_size);
+        data_ptr = data_ptr + write_size;
 
-        size -= write_size;
-        if (size <= 0 || this->idle_size() == 0) {
+        copy_size -= write_size;
+        if (copy_size <= 0 || this->idle_size() == 0) {
             break;
         }
     }
     
 
-    return size;
+    return size - copy_size;
 }
 
 BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
@@ -181,21 +185,24 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
         return -1;
     }
 
+    BUFSIZE_T copy_size = size;
     BUFFER_PTR data_ptr = (BUFFER_PTR)data;
+    
     // 检查buff数组后面是否有连续的内存可以读
     while (true)
     {
-        BUFSIZE_T read_size = this->get_cont_read_size() > size ? size : this->get_cont_read_size();
+        BUFSIZE_T read_size = this->get_cont_read_size() > copy_size ? copy_size : this->get_cont_read_size();
         memmove(data_ptr, this->get_read_buffer_ptr(), read_size);
         this->update_read_pos(read_size);
-
-        size -= read_size;
-        if (size <= 0 || this->data_size() == 0) {
+        data_ptr = data_ptr + read_size;
+        
+        copy_size -= read_size;
+        if (copy_size <= 0 || this->data_size() == 0) {
             break;
         }
     }
 
-    return size;
+    return size - copy_size;
 }
 
 int 
@@ -230,18 +237,17 @@ int ByteBuffer::read_string(string &str, BUFSIZE_T str_size)
     if (str_size == -1) {
         str_size = this->data_size();
     }
-    BUFSIZE_T max_str_size = str.max_size();
-    int read_size = str_size > max_str_size ? max_str_size - 1  : str_size;
-    char *str_ptr = new char[read_size + 1];
-    BUFSIZE_T ret =  this->copy_data_from_buffer(str_ptr, read_size);
+
+    char *str_ptr = new char[str_size + 1];
+    BUFSIZE_T ret =  this->copy_data_from_buffer(str_ptr, str_size);
     if (ret == -1) {
         return -1;
     }
-    str_ptr[read_size] = '\0';
+    str_ptr[str_size] = '\0';
     str = str_ptr;
     delete[] str_ptr;
 
-    return str.size();
+    return str.length();
 }
 
 BUFSIZE_T ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
@@ -539,10 +545,14 @@ ByteBuffer::get_cont_write_size(void) const
         return 0;
     }
 
-    if (start_read_pos_ >= start_write_pos_) {
+    if (start_read_pos_ > start_write_pos_) {
         return this->idle_size();
     } else if (start_read_pos_ <= start_write_pos_) {
-        return max_buffer_size_ - start_write_pos_;
+        if (start_read_pos_ == 0) {
+            return this->idle_size();
+        } else {
+            return max_buffer_size_ - start_write_pos_;
+        }
     }
 
     return 0;

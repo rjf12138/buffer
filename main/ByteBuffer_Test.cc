@@ -212,7 +212,7 @@ private:
     test_stru vec_bytes_ = {'b', 12345, "Nice to meet you", "hello"};
 };
 
-// 对非锁的读写函数循环测试
+// 对非锁的读写函数循环测试，功能测试
 TEST_F(ByteBuffer_Test, ByteBuff_none_lock_read_write) 
 {
     int buff_size = 64;
@@ -265,7 +265,7 @@ TEST_F(ByteBuffer_Test, ByteBuff_none_lock_read_write)
         ASSERT_EQ((std::size_t)buff.write_string(str), str.length());
         ASSERT_EQ((std::size_t)buff.data_size(), str.length());
         string val_str;
-        EXPECT_EQ((std::size_t)buff.read_string(val_str), str.length());
+        ASSERT_EQ((std::size_t)buff.read_string(val_str), str.length());
         ASSERT_EQ(buff.data_size(), 0);
         ASSERT_EQ(val_str, str);
     }
@@ -285,7 +285,7 @@ TEST_F(ByteBuffer_Test, ByteBuff_none_lock_read_write)
     }
 }
 
-// 测试 buffer 空间增长
+// 测试 buffer 空间增长，压力测试
 #define TEST_SPCE_INCREASE 26
 TEST_F(ByteBuffer_Test, ByteBuffer_increase)
 {
@@ -305,6 +305,109 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         ASSERT_EQ(buff.empty(), true);
         n = n * 2;
     }
+
+    // 将空间写满,再读出来
+    BUFSIZE_T write_cnt = 0, read_cnt = 0;
+    ByteBuffer max_buff;
+    // 写 8 位数据
+    int8_t data8 = 'b';
+    while(true) {
+        BUFSIZE_T ret = max_buff.write_int8(data8);
+        if (ret != sizeof(int8_t)) {
+            break;
+        }
+        write_cnt++;
+    }
+    ASSERT_EQ(max_buff.data_size(), MAX_BUFFER_SIZE-1);
+    ASSERT_EQ(max_buff.idle_size(), 0);
+
+    // 读 8 位数据
+    while(true) {
+        int8_t data;
+        BUFSIZE_T ret = max_buff.read_int8(data);
+        if (ret != sizeof(int8_t) || data != data8) {
+            break;
+        }
+        read_cnt++;
+    }
+    ASSERT_EQ(max_buff.idle_size(), MAX_BUFFER_SIZE-1);
+    ASSERT_EQ(max_buff.data_size(), 0);
+    ASSERT_EQ(write_cnt, read_cnt);
+    // 同一缓存再次写满
+    while(true) {
+        BUFSIZE_T ret = max_buff.write_int8(data8);
+        if (ret != sizeof(int8_t)) {
+            break;
+        }
+        write_cnt++;
+    }
+    ASSERT_EQ(max_buff.data_size(), MAX_BUFFER_SIZE-1);
+    ASSERT_EQ(max_buff.idle_size(), 0);
+
+    // 读 8 位数据
+    while(true) {
+        int8_t data;
+        BUFSIZE_T ret = max_buff.read_int8(data);
+        if (ret != sizeof(int8_t) || data != data8) {
+            break;
+        }
+        read_cnt++;
+    }
+    ASSERT_EQ(max_buff.idle_size(), MAX_BUFFER_SIZE-1);
+    ASSERT_EQ(max_buff.data_size(), 0);
+    ASSERT_EQ(write_cnt, read_cnt);
+
+//////////////////////////////////////// 16 /////////////////////////////////////
+    write_cnt = 0, read_cnt = 0;
+    ByteBuffer buff16;
+    // 写 16 位数据
+    int16_t data16 = 2345;
+    while(true) {
+        BUFSIZE_T ret = max_buff.write_int16(data16);
+        if (ret != sizeof(int16_t)) {
+            break;
+        }
+        write_cnt++;
+    }
+    ASSERT_EQ(max_buff.data_size(), MAX_BUFFER_SIZE-1);
+    ASSERT_EQ(max_buff.idle_size(), 0);
+
+    // 读 16 位数据
+    while(true) {
+        int16_t data;
+        BUFSIZE_T ret = max_buff.read_int16(data);
+        if (ret != sizeof(int16_t) || data != data16) {
+            break;
+        }
+        read_cnt++;
+    }
+    ASSERT_EQ(max_buff.idle_size(), MAX_BUFFER_SIZE-1);
+    ASSERT_EQ(max_buff.data_size(), 0);
+    ASSERT_EQ(write_cnt, read_cnt);
+    // 再次写满
+    while(true) {
+        BUFSIZE_T ret = max_buff.write_int16(data16);
+        if (ret != sizeof(int16_t)) {
+            break;
+        }
+        write_cnt++;
+    }
+    ASSERT_EQ(max_buff.data_size(), MAX_BUFFER_SIZE-1);
+    ASSERT_EQ(max_buff.idle_size(), 0);
+
+    // 读 8 位数据
+    while(true) {
+        int16_t data;
+        BUFSIZE_T ret = max_buff.read_int16(data);
+        if (ret != sizeof(int16_t) || data != data16) {
+            break;
+        }
+        read_cnt++;
+    }
+    ASSERT_EQ(max_buff.idle_size(), MAX_BUFFER_SIZE-1);
+    ASSERT_EQ(max_buff.data_size(), 0);
+    ASSERT_EQ(write_cnt, read_cnt);
+    ////////////////////////////////// 16 ////////////////////////////////////////
 }
 
 #define TEST_THREAD_NUM 1000
