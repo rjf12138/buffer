@@ -22,39 +22,39 @@ public:
     ByteBuffer(const ByteBuffer &buff);
     virtual ~ByteBuffer();
 
-    int read_only_int8(int8_t &val) {return 0;}
-    int read_only_int16(int16_t &val) {return 0;}
-    int read_only_int32(int32_t &val) {return 0;}
-    int read_only_int64(int64_t &val) {return 0;}
-    int read_only_string(string &str) {return 0;}
+    BUFSIZE_T read_only_int8(int8_t &val) {return 0;}
+    BUFSIZE_T read_only_int16(int16_t &val) {return 0;}
+    BUFSIZE_T read_only_int32(int32_t &val) {return 0;}
+    BUFSIZE_T read_only_int64(int64_t &val) {return 0;}
+    BUFSIZE_T read_only_string(string &str) {return 0;}
     BUFSIZE_T read_only_bytes(void *buf, BUFSIZE_T buf_size, bool match = false) {return 0;}
 
-    int read_int8(int8_t &val);
-    int read_int16(int16_t &val);
-    int read_int32(int32_t &val);
-    int read_int64(int64_t &val);
-    int read_string(string &str, BUFSIZE_T str_size = -1);
+    BUFSIZE_T read_int8(int8_t &val);
+    BUFSIZE_T read_int16(int16_t &val);
+    BUFSIZE_T read_int32(int32_t &val);
+    BUFSIZE_T read_int64(int64_t &val);
+    BUFSIZE_T read_string(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T read_bytes(void *buf, BUFSIZE_T buf_size, bool match = false);
 
-    int write_int8(int8_t val);
-    int write_int16(int16_t val);
-    int write_int32(int32_t val);
-    int write_int64(int64_t val);
-    int write_string(string &str, BUFSIZE_T str_size = -1);
+    BUFSIZE_T write_int8(int8_t val);
+    BUFSIZE_T write_int16(int16_t val);
+    BUFSIZE_T write_int32(int32_t val);
+    BUFSIZE_T write_int64(int64_t val);
+    BUFSIZE_T write_string(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T write_bytes(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
-    int read_int8_lock(int8_t &val);
-    int read_int16_lock(int16_t &val);
-    int read_int32_lock(int32_t &val);
-    int read_int64_lock(int64_t &val);
-    int read_string_lock(string &str, BUFSIZE_T str_size = -1);
+    BUFSIZE_T read_int8_lock(int8_t &val);
+    BUFSIZE_T read_int16_lock(int16_t &val);
+    BUFSIZE_T read_int32_lock(int32_t &val);
+    BUFSIZE_T read_int64_lock(int64_t &val);
+    BUFSIZE_T read_string_lock(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match = false);
 
-    int write_int8_lock(int8_t val);
-    int write_int16_lock(int16_t val);
-    int write_int32_lock(int32_t val);
-    int write_int64_lock(int64_t val);
-    int write_string_lock(string &str, BUFSIZE_T str_size = -1);
+    BUFSIZE_T write_int8_lock(int8_t val);
+    BUFSIZE_T write_int16_lock(int16_t val);
+    BUFSIZE_T write_int32_lock(int32_t val);
+    BUFSIZE_T write_int64_lock(int64_t val);
+    BUFSIZE_T write_string_lock(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T write_bytes_lock(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
     // 网络字节序转换

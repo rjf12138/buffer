@@ -86,21 +86,21 @@ void ByteBuffer::next_write_pos(int offset)
 BUFSIZE_T ByteBuffer::data_size(void) const
 {
     
-    return data_size_;
+    return data_size_ <= 0 ? 0 : data_size_;
 }
 
 BUFSIZE_T ByteBuffer::idle_size() const 
 {
     // -1 是为了留出一位，防止写满和为空的时候，
     // start_write和start_read都指向同一个位置，无法辨认
-    return (max_buffer_size_ == 0 ? 0 : max_buffer_size_ - data_size_ - 1);
+    return (max_buffer_size_ <= 0 || max_buffer_size_ <= data_size_ ? 0 : max_buffer_size_ - data_size_ - 1);
 }
 
 BUFSIZE_T 
 ByteBuffer::resize(BUFSIZE_T size)
 {
     // 重新分配的空间不能比当前小
-    if (size < 0 || size <= max_buffer_size_ || size > MAX_BUFFER_SIZE)
+    if (size < 0 || size <= max_buffer_size_ || size >= MAX_BUFFER_SIZE + 1)
     {
         return -1;
     }
@@ -205,29 +205,33 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
     return size - copy_size;
 }
 
-int 
+BUFSIZE_T
 ByteBuffer::read_int8(int8_t &val)
 {
     return this->copy_data_from_buffer(&val, sizeof(int8_t));
 }
 
-int ByteBuffer::read_int16(int16_t &val)
+BUFSIZE_T
+ByteBuffer::read_int16(int16_t &val)
 {
     return this->copy_data_from_buffer(&val, sizeof(int16_t));
 }
 
-int ByteBuffer::read_int32(int32_t &val)
+BUFSIZE_T
+ByteBuffer::read_int32(int32_t &val)
 {
     return this->copy_data_from_buffer(&val, sizeof(int32_t));
 }
 
-int ByteBuffer::read_int64(int64_t &val)
+BUFSIZE_T
+ByteBuffer::read_int64(int64_t &val)
 {
     return this->copy_data_from_buffer(&val, sizeof(BUFSIZE_T));
 }
 
 // 字符串是以 ‘\0’ 结尾的
-int ByteBuffer::read_string(string &str, BUFSIZE_T str_size)
+BUFSIZE_T
+ByteBuffer::read_string(string &str, BUFSIZE_T str_size)
 {
     if (this->empty()) {
         fprintf(stderr, "ByteBuffer is empty!");
@@ -250,7 +254,8 @@ int ByteBuffer::read_string(string &str, BUFSIZE_T str_size)
     return str.length();
 }
 
-BUFSIZE_T ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
+BUFSIZE_T 
+ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == nullptr) {
         fprintf(stderr, "output buffer(data) is null!");
@@ -260,27 +265,32 @@ BUFSIZE_T ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
     return this->copy_data_from_buffer(buf, buf_size);
 }
 
-int ByteBuffer::write_int8(int8_t val)
+BUFSIZE_T
+ByteBuffer::write_int8(int8_t val)
 {
     return this->copy_data_to_buffer(&val, sizeof(int8_t));
 }
 
-int ByteBuffer::write_int16(int16_t val)
+BUFSIZE_T
+ByteBuffer::write_int16(int16_t val)
 {
     return this->copy_data_to_buffer(&val, sizeof(int16_t));
 }
 
-int ByteBuffer::write_int32(int32_t val)
+BUFSIZE_T
+ByteBuffer::write_int32(int32_t val)
 {
     return this->copy_data_to_buffer(&val, sizeof(int32_t));
 }
 
-int ByteBuffer::write_int64(int64_t val)
+BUFSIZE_T
+ByteBuffer::write_int64(int64_t val)
 {
     return this->copy_data_to_buffer(&val, sizeof(BUFSIZE_T));
 }
 
-int ByteBuffer::write_string(string &str, BUFSIZE_T str_size)
+BUFSIZE_T
+ByteBuffer::write_string(string &str, BUFSIZE_T str_size)
 {
     return this->copy_data_to_buffer(str.c_str(), str.length());
 }
@@ -295,46 +305,51 @@ BUFSIZE_T ByteBuffer::write_bytes(const void *buf, BUFSIZE_T buf_size, bool matc
     return this->copy_data_to_buffer(buf, buf_size);
 }
 
-int ByteBuffer::read_int8_lock(int8_t &val)
+BUFSIZE_T
+ByteBuffer::read_int8_lock(int8_t &val)
 {
     lock_.lock();
-    int ret_size = this->read_int8(val);
+    BUFSIZE_T ret_size = this->read_int8(val);
     lock_.unlock();
 
     return ret_size;
 }
 
-int ByteBuffer::read_int16_lock(int16_t &val)
+BUFSIZE_T
+ByteBuffer::read_int16_lock(int16_t &val)
 {
     lock_.lock();
-    int ret_size = this->read_int16(val);
+    BUFSIZE_T ret_size = this->read_int16(val);
     lock_.unlock();
 
     return ret_size;
 }
 
-int ByteBuffer::read_int32_lock(int32_t &val)
+BUFSIZE_T
+ByteBuffer::read_int32_lock(int32_t &val)
 {
     lock_.lock();
-    int ret_size = this->read_int32(val);
+    BUFSIZE_T ret_size = this->read_int32(val);
     lock_.unlock();
 
     return ret_size;
 }
 
-int ByteBuffer::read_int64_lock(int64_t &val)
+BUFSIZE_T
+ByteBuffer::read_int64_lock(int64_t &val)
 {
     lock_.lock();
-    int ret_size = this->read_int64(val);
+    BUFSIZE_T ret_size = this->read_int64(val);
     lock_.unlock();
 
     return ret_size;
 }
 
-int ByteBuffer::read_string_lock(string &str, BUFSIZE_T str_size)
+BUFSIZE_T
+ByteBuffer::read_string_lock(string &str, BUFSIZE_T str_size)
 {
     lock_.lock();
-    int ret_size = this->read_string(str, str_size);
+    BUFSIZE_T ret_size = this->read_string(str, str_size);
     lock_.unlock();
 
     return ret_size;
@@ -343,50 +358,57 @@ int ByteBuffer::read_string_lock(string &str, BUFSIZE_T str_size)
 BUFSIZE_T ByteBuffer::read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match)
 {
     lock_.lock();
-    int ret_size = this->read_bytes(buf, buf_size, match);
+    BUFSIZE_T ret_size = this->read_bytes(buf, buf_size, match);
     lock_.unlock();
 
     return ret_size;
 }
 
-int ByteBuffer::write_int8_lock(int8_t val)
+BUFSIZE_T
+ByteBuffer::write_int8_lock(int8_t val)
 {
     lock_.lock();
-    int ret_size = this->write_int8(val);
+    BUFSIZE_T ret_size = this->write_int8(val);
     lock_.unlock();
 
     return ret_size;
 }
 
-int ByteBuffer::write_int16_lock(int16_t val)
+BUFSIZE_T
+ByteBuffer::write_int16_lock(int16_t val)
 {
     lock_.lock();
-    int ret_size = this->write_int16(val);
+    BUFSIZE_T ret_size = this->write_int16(val);
     lock_.unlock();
 
     return ret_size;
 }
 
-int ByteBuffer::write_int32_lock(int32_t val)
+BUFSIZE_T
+ByteBuffer::write_int32_lock(int32_t val)
 {
     lock_.lock();
-    int ret_size = this->write_int32(val);
+    BUFSIZE_T ret_size = this->write_int32(val);
     lock_.unlock();
 
     return ret_size;
 }
-int ByteBuffer::write_int64_lock(int64_t val)
+
+BUFSIZE_T
+ByteBuffer::write_int64_lock(int64_t val)
 {
     lock_.lock();
-    int ret_size = this->write_int64(val);
+    BUFSIZE_T ret_size = this->write_int64(val);
     lock_.unlock();
 
     return ret_size;
 }
-int ByteBuffer::write_string_lock(string &str, BUFSIZE_T str_size)
+
+BUFSIZE_T
+ByteBuffer::write_string_lock(string &str, BUFSIZE_T str_size)
 {
     lock_.lock();
-    int ret_size = this->write_string(str, str_size);
+    BUFSIZE_T ret_size = this->write_string(str, str_size);
     lock_.unlock();
 
     return ret_size;
