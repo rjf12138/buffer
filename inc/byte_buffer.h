@@ -203,15 +203,16 @@ public:
 
         return tmp;
     }
-    ByteBuffer_Iterator operator+(int inc)
+    ByteBuffer_Iterator operator+(BUFSIZE_T inc)
     {
         ByteBuffer_Iterator tmp_iter = *this;
-        for (int i = 0; i < inc; ++i) {
-            ++tmp_iter;
-            if (tmp_iter.curr_pos_ == tmp_iter.buff_->start_write_pos_) {
-                break;
-            }
+        if (buff_->data_size() == 0 || inc > buff_->data_size()) {
+            tmp_iter.curr_pos_ = tmp_iter.buff_->start_write_pos_;
+            return tmp_iter;
         }
+
+        ByteBuffer_Iterator tmp_iter = *this;
+        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ + inc) % buff_->max_buffer_size_;
 
         return tmp_iter;
     }
@@ -312,10 +313,32 @@ public:
 
         return ostr.str();
     }
+private:
+    bool check_iterator(void) {
+        if (buff_ == nullptr || buff_->buffer_ == nullptr) {
+            curr_pos_ = 0;
+            return false;
+        }
 
+        if (buff_->start_write_pos_ >= buff_->start_read_pos_) {
+            if (curr_pos_ < buff_->start_read_pos_ || curr_pos_ >= buff_->start_write_pos_) {
+                curr_pos_ = buff_->start_write_pos_;
+                return true;
+            }
+        }
+
+        if (buff_->start_write_pos_ < buff_->start_read_pos_) {
+            if (curr_pos_ < buff_->start_read_pos_ && curr_pos_ >= buff_->start_write_pos_) {
+                curr_pos_ = buff_->start_write_pos_;
+                return true;
+            }
+        }
+
+        return false;
+    }
 private:
     const ByteBuffer *buff_ = nullptr;
-    int32_t curr_pos_;
+    BUFSIZE_T curr_pos_;
 };
 
 }

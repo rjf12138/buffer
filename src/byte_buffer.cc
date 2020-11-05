@@ -35,8 +35,7 @@ ByteBuffer::ByteBuffer(const ByteBuffer &buff)
         buffer_ = new BUFFER_TYPE[buff.max_buffer_size_];
         memmove(buffer_, buff.buffer_, buff.max_buffer_size_);
     } else {
-        buffer_ = nullptr;
-        max_buffer_size_ = 0;
+        this->clear();
     }
 }
 
@@ -108,23 +107,23 @@ ByteBuffer::resize(BUFSIZE_T size)
         return 0;
     }
 
-    max_buffer_size_ = 2 * size;
-    if (max_buffer_size_ > MAX_BUFFER_SIZE) {
-        max_buffer_size_ = MAX_BUFFER_SIZE;
+    BUFSIZE_T new_size = 2 * size;
+    if (new_size > MAX_BUFFER_SIZE) {
+        new_size = MAX_BUFFER_SIZE;
     }
 
-    BUFFER_PTR new_buffer = new BUFFER_TYPE[max_buffer_size_];
+    BUFSIZE_T tmp_buffer_size = this->data_size();
+    BUFFER_PTR tmp_buffer = nullptr;
+    if (tmp_buffer_size > 0) {
+        tmp_buffer = new BUFFER_TYPE[tmp_buffer_size];
+        this->read_bytes(tmp_buffer, tmp_buffer_size);
+    }
 
-    ByteBuffer tmp_buf = *this;
-    this->set_extern_buffer(new_buffer, max_buffer_size_);
-
-    BUFSIZE_T copy_size = this->copy_data_to_buffer(tmp_buf.get_read_buffer_ptr(), tmp_buf.get_cont_read_size());
-    std::cout << "1-copy_size: " << copy_size << " cont_size: " << tmp_buf.get_cont_read_size() << " data_size: " << used_data_size_ << std::endl;;
-    tmp_buf.update_read_pos(copy_size);
-    if (tmp_buf.data_size() > 0) {
-        copy_size = this->copy_data_to_buffer(tmp_buf.get_read_buffer_ptr(), tmp_buf.get_cont_read_size());
-        std::cout << "2-copy_size: " << copy_size << " cont_size: " << tmp_buf.get_cont_read_size() << " data_size: " << used_data_size_ << std::endl;;
-        tmp_buf.update_read_pos(copy_size);
+    BUFFER_PTR new_buffer = new BUFFER_TYPE[new_size];
+    this->set_extern_buffer(new_buffer, new_size);
+    if (tmp_buffer_size > 0) {
+        this->write_bytes(tmp_buffer, tmp_buffer_size);
+        delete[] tmp_buffer;
     }
 
     return max_buffer_size_;
@@ -163,6 +162,11 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
         if (ret == -1) {
            return 0;
         }
+    }
+
+    if (this->idle_size() < size) {
+        fprintf(stderr, "ByteBuffer remain idle space(%ld) is less than size(%ld)!", this->idle_size(), size);
+        return 0;
     }
 
     BUFSIZE_T copy_size = size;
@@ -550,13 +554,14 @@ ByteBuffer::operator=(const ByteBuffer& src)
     start_read_pos_ = src.start_read_pos_;
     start_write_pos_ = src.start_write_pos_;
     used_data_size_ = src.used_data_size_;
+    free_data_size_ = src.free_data_size_;
     max_buffer_size_ = src.max_buffer_size_;
 
     if (src.buffer_ != nullptr && src.max_buffer_size_ > 0) {
         buffer_ = new BUFFER_TYPE[src.max_buffer_size_];
         memmove(buffer_, src.buffer_, src.max_buffer_size_);
     } else {
-        buffer_ = nullptr;
+        this->clear();
     }
     return *this;
 }
@@ -576,15 +581,15 @@ ByteBuffer::get_read_buffer_ptr(void) const
 BUFSIZE_T 
 ByteBuffer::get_cont_write_size(void) const
 {
-    if (this->idle_size() <= 0) {
+    if (free_data_size_ <= 0) {
         return 0;
     }
 
     if (start_read_pos_ > start_write_pos_) {
-        return this->idle_size();
+        return free_data_size_;
     } else if (start_read_pos_ <= start_write_pos_) {
         if (start_read_pos_ == 0) {
-            return this->idle_size();
+            return free_data_size_;
         } else {
             return max_buffer_size_ - start_write_pos_;
         }
@@ -612,7 +617,7 @@ ByteBuffer::get_cont_read_size(void) const
 void 
 ByteBuffer::update_write_pos(BUFSIZE_T offset)
 {
-    if (offset <= 0 || offset > this->idle_size()) {
+    if (offset <= 0 || offset > free_data_size_) {
         return ;
     }
 
@@ -626,7 +631,7 @@ ByteBuffer::update_write_pos(BUFSIZE_T offset)
 void 
 ByteBuffer::update_read_pos(BUFSIZE_T offset)
 {
-    if (offset <= 0 || offset > this->data_size()) {
+    if (offset <= 0 || offset > used_data_size_) {
         return ;
     }
 
