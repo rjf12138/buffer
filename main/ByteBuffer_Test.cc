@@ -295,6 +295,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         for (BUFSIZE_T j = 0; j < n / 2; ++j) {
             buff.write_int8('a');
         }
+        
         ASSERT_EQ(buff.data_size(), n / 2);
         int8_t out;
         for (BUFSIZE_T j = 0; j < n / 2; ++j) {
@@ -318,7 +319,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_EQ(max_buff.data_size(), max_buff.max_size());
+    ASSERT_EQ(max_buff.data_size(), MAX_DATA_SIZE);
     ASSERT_EQ(max_buff.idle_size(), 0);
 
     // 读 8 位数据
@@ -330,7 +331,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         read_cnt++;
     }
-    ASSERT_EQ(max_buff.idle_size(), max_buff.max_size());
+    ASSERT_EQ(max_buff.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(max_buff.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
     // 同一缓存再次写满
@@ -341,7 +342,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_EQ(max_buff.data_size(), max_buff.max_size());
+    ASSERT_EQ(max_buff.data_size(), MAX_DATA_SIZE);
     ASSERT_EQ(max_buff.idle_size(), 0);
 
     // 读 8 位数据
@@ -353,7 +354,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         read_cnt++;
     }
-    ASSERT_EQ(max_buff.idle_size(), max_buff.max_size());
+    ASSERT_EQ(max_buff.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(max_buff.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
 
@@ -370,7 +371,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         write_cnt++;
     }
     
-    ASSERT_GT((BUFSIZE_T)sizeof(int16_t), buff16.max_size() - buff16.data_size());
+    ASSERT_GT((BUFSIZE_T)sizeof(int16_t), MAX_DATA_SIZE - buff16.data_size());
     ASSERT_LE(buff16.idle_size(), (BUFSIZE_T)sizeof(int16_t));
 
     // 读 16 位数据
@@ -382,7 +383,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         read_cnt++;
     }
-    ASSERT_EQ(buff16.idle_size(), buff16.max_size());
+    ASSERT_EQ(buff16.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(buff16.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
     write_cnt = read_cnt = 0;
@@ -394,7 +395,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_GT((BUFSIZE_T)sizeof(int16_t), buff16.max_size() - buff16.data_size());
+    ASSERT_GT((BUFSIZE_T)sizeof(int16_t), MAX_DATA_SIZE - buff16.data_size());
     ASSERT_LE(buff16.idle_size(), (BUFSIZE_T)sizeof(int16_t));
     // 读 16 位数据
     while(true) {
@@ -405,7 +406,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         read_cnt++;
     }
-    ASSERT_EQ(buff16.idle_size(), buff16.max_size());
+    ASSERT_EQ(buff16.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(buff16.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
     ////////////////////////////////// 16 ////////////////////////////////////////
@@ -422,7 +423,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_GT((BUFSIZE_T)str.length(), buffbyte.max_size() - buffbyte.data_size());
+    ASSERT_GT((BUFSIZE_T)str.length(), MAX_DATA_SIZE - buffbyte.data_size());
     ASSERT_LE(buffbyte.idle_size(), (BUFSIZE_T)str.length());
 
     while(true) {
@@ -434,7 +435,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         read_cnt++;
     }
 
-    ASSERT_EQ(buffbyte.idle_size(), buffbyte.max_size());
+    ASSERT_EQ(buffbyte.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(buffbyte.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
 
@@ -447,7 +448,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_GT((BUFSIZE_T)str.length(), buffbyte.max_size() - buffbyte.data_size());
+    ASSERT_GT((BUFSIZE_T)str.length(), MAX_DATA_SIZE - buffbyte.data_size());
     ASSERT_LE(buffbyte.idle_size(), (BUFSIZE_T)str.length());
 
 
@@ -460,7 +461,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         read_cnt++;
     }
-    ASSERT_EQ(buffbyte.idle_size(), buffbyte.max_size());
+    ASSERT_EQ(buffbyte.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(buffbyte.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
 
@@ -479,7 +480,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_GT(data_size, buffbyte.max_size() - buffbyte.data_size());
+    ASSERT_GT(data_size, MAX_DATA_SIZE - buffbyte.data_size());
     ASSERT_LE(buffbyte.idle_size(), data_size);
 
     while(true) {
@@ -491,7 +492,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         read_cnt++;
     }
 
-    ASSERT_EQ(buffbyte.idle_size(), buffbyte.max_size());
+    ASSERT_EQ(buffbyte.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(buffbyte.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
 
@@ -504,7 +505,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_GT(data_size, buffbyte.max_size() - buffbyte.data_size());
+    ASSERT_GT(data_size, MAX_DATA_SIZE - buffbyte.data_size());
     ASSERT_LE(buffbyte.idle_size(), data_size);
 
 
@@ -518,7 +519,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         read_cnt++;
     }
 
-    ASSERT_EQ(buffbyte.idle_size(), buffbyte.max_size());
+    ASSERT_EQ(buffbyte.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(buffbyte.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
 }

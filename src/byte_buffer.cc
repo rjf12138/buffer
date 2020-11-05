@@ -3,17 +3,22 @@
 namespace my_util {
 
 ByteBuffer::ByteBuffer(BUFSIZE_T size)
-: start_read_pos_(0), start_write_pos_(0), data_size_(0)
+: start_read_pos_(0), start_write_pos_(0), used_data_size_(0)
 {
     if (size <= 0)
     {
         max_buffer_size_ = 0;
+        free_data_size_ = 0;
         buffer_ = nullptr;
     }
     else
     {
         max_buffer_size_ = 2 * size;
-        max_buffer_size_ = max_buffer_size_ <= MAX_BUFFER_SIZE ? max_buffer_size_ : MAX_BUFFER_SIZE;
+        if (max_buffer_size_ >= MAX_BUFFER_SIZE) {
+            max_buffer_size_ = MAX_BUFFER_SIZE;
+        }
+
+        free_data_size_ = max_buffer_size_ - 1;
         buffer_ = new BUFFER_TYPE[max_buffer_size_];
     }
 }
@@ -22,7 +27,8 @@ ByteBuffer::ByteBuffer(const ByteBuffer &buff)
 {
     start_read_pos_ = buff.start_read_pos_;
     start_write_pos_ = buff.start_write_pos_;
-    data_size_ = buff.data_size_;
+    used_data_size_ = buff.used_data_size_;
+    free_data_size_ = buff.free_data_size_;
     max_buffer_size_ = buff.max_buffer_size_;
 
     if (buff.buffer_ != nullptr && buff.max_buffer_size_ > 0) {
@@ -46,7 +52,8 @@ BUFSIZE_T ByteBuffer::clear(void)
         buffer_ = nullptr;
     }
 
-    data_size_ = 0;
+    used_data_size_ = 0;
+    free_data_size_ = 0;
     start_read_pos_ = 0;
     start_write_pos_ = 0;
     max_buffer_size_ = 0;
@@ -60,15 +67,10 @@ BUFSIZE_T ByteBuffer::set_extern_buffer(BUFFER_PTR exbuf, int buff_size)
         return 0;
     }
 
-    if (buffer_ == nullptr) {
-        max_buffer_size_ = buff_size;
-        buffer_ = exbuf;
-        start_read_pos_ = start_write_pos_ = 0;
-    } else {
-        this->clear();
-        max_buffer_size_ = buff_size;
-        buffer_ = exbuf;
-    }
+    this->clear();
+    max_buffer_size_ = buff_size;
+    free_data_size_ = max_buffer_size_ - 1;
+    buffer_ = exbuf;
 
     return buff_size;
 }
@@ -87,23 +89,14 @@ void ByteBuffer::next_write_pos(int offset)
 BUFSIZE_T ByteBuffer::data_size(void) const
 {
     
-    return data_size_ <= 0 || data_size_ >= MAX_BUFFER_SIZE ? 0 : data_size_;
+    return used_data_size_;
 }
 
 BUFSIZE_T ByteBuffer::idle_size() const 
 {
     // -1 是为了留出一位，防止写满和为空的时候，
     // start_write和start_read都指向同一个位置，无法辨认
-    std::cout << "idle_data_size: " << data_size_ << std::endl;
-    std::cout << "max_buffer_size: " << max_buffer_size_ << std::endl;
-    return (max_buffer_size_ <= 0 || max_buffer_size_ <= data_size_ ? 0 : max_buffer_size_ - data_size_ - 1);
-}
-
-BUFSIZE_T ByteBuffer::max_size(void) const
-{
-    // -1 是为了留出一位，防止写满和为空的时候，
-    // start_write和start_read都指向同一个位置，无法辨认
-    return MAX_BUFFER_SIZE - 1;
+    return free_data_size_;
 }
 
 BUFSIZE_T 
@@ -115,14 +108,23 @@ ByteBuffer::resize(BUFSIZE_T size)
         return 0;
     }
 
-    BUFSIZE_T new_size = 2 * size;
-    new_size = new_size <= MAX_BUFFER_SIZE ? new_size : MAX_BUFFER_SIZE;
-    BUFFER_PTR new_buffer = new BUFFER_TYPE[new_size];
+    max_buffer_size_ = 2 * size;
+    if (max_buffer_size_ > MAX_BUFFER_SIZE) {
+        max_buffer_size_ = MAX_BUFFER_SIZE;
+    }
+
+    BUFFER_PTR new_buffer = new BUFFER_TYPE[max_buffer_size_];
 
     ByteBuffer tmp_buf = *this;
-    this->set_extern_buffer(new_buffer, new_size);
-    for (auto iter = tmp_buf.begin(); iter != tmp_buf.end(); ++iter) {
-        this->write_int8(*iter);
+    this->set_extern_buffer(new_buffer, max_buffer_size_);
+
+    BUFSIZE_T copy_size = this->copy_data_to_buffer(tmp_buf.get_read_buffer_ptr(), tmp_buf.get_cont_read_size());
+    std::cout << "1-copy_size: " << copy_size << " cont_size: " << tmp_buf.get_cont_read_size() << " data_size: " << used_data_size_ << std::endl;;
+    tmp_buf.update_read_pos(copy_size);
+    if (tmp_buf.data_size() > 0) {
+        copy_size = this->copy_data_to_buffer(tmp_buf.get_read_buffer_ptr(), tmp_buf.get_cont_read_size());
+        std::cout << "2-copy_size: " << copy_size << " cont_size: " << tmp_buf.get_cont_read_size() << " data_size: " << used_data_size_ << std::endl;;
+        tmp_buf.update_read_pos(copy_size);
     }
 
     return max_buffer_size_;
@@ -547,7 +549,7 @@ ByteBuffer::operator=(const ByteBuffer& src)
 
     start_read_pos_ = src.start_read_pos_;
     start_write_pos_ = src.start_write_pos_;
-    data_size_ = src.data_size_;
+    used_data_size_ = src.used_data_size_;
     max_buffer_size_ = src.max_buffer_size_;
 
     if (src.buffer_ != nullptr && src.max_buffer_size_ > 0) {
@@ -594,14 +596,14 @@ ByteBuffer::get_cont_write_size(void) const
 BUFSIZE_T 
 ByteBuffer::get_cont_read_size(void) const
 {
-    if (data_size_ <= 0) {
+    if (used_data_size_ <= 0) {
         return 0;
     }
 
     if (start_read_pos_ > start_write_pos_) {
         return max_buffer_size_ - start_read_pos_;
     } else if (start_write_pos_ > start_read_pos_) {
-        return data_size_;
+        return used_data_size_;
     }
 
     return 0;
@@ -614,7 +616,8 @@ ByteBuffer::update_write_pos(BUFSIZE_T offset)
         return ;
     }
 
-    data_size_ += offset;
+    used_data_size_ += offset;
+    free_data_size_ -= offset;
     start_write_pos_ = (start_write_pos_ + offset) % max_buffer_size_;
 
     return ;
@@ -627,7 +630,8 @@ ByteBuffer::update_read_pos(BUFSIZE_T offset)
         return ;
     }
 
-    data_size_ -= offset;
+    used_data_size_ -= offset;
+    free_data_size_ += offset;
     start_read_pos_ = (start_read_pos_ + offset) % max_buffer_size_;
 
     return ;

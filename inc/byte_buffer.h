@@ -6,8 +6,8 @@
 
 namespace my_util {
 
-#define MAX_STRING_SIZE     512
-#define MAX_BUFFER_SIZE     1*1024*1024*1024
+#define MAX_BUFFER_SIZE     1073741824 // 1*1024*1024*1024 (1GB)
+#define MAX_DATA_SIZE       1073741823 // 多的一个字节用于防止，缓存写满时，start_write 和 start_read 重合而造成分不清楚是写满了还是没写
 
 typedef int64_t     BUFSIZE_T;
 typedef uint64_t    UNBUFSIZE_T;
@@ -68,8 +68,6 @@ public:
     bool empty(void) const;
     BUFSIZE_T data_size(void) const;
     BUFSIZE_T idle_size(void) const;
-    // 可分配的最大空间
-    BUFSIZE_T max_size(void) const;
     BUFSIZE_T clear(void);
     BUFSIZE_T set_extern_buffer(BUFFER_PTR exbuf, int buff_size);
 
@@ -116,7 +114,8 @@ private:
     BUFSIZE_T start_read_pos_;
     BUFSIZE_T start_write_pos_;
 
-    BUFSIZE_T data_size_ = 0;
+    BUFSIZE_T used_data_size_;
+    BUFSIZE_T free_data_size_;
     BUFSIZE_T max_buffer_size_;
 
     shared_ptr<ByteBuffer_Iterator> bytebuff_iter_start_;
