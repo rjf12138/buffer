@@ -12,7 +12,8 @@ ByteBuffer::ByteBuffer(BUFSIZE_T size)
     }
     else
     {
-        max_buffer_size_ = (2 * size) <= MAX_BUFFER_SIZE ? 2 * size : MAX_BUFFER_SIZE;
+        max_buffer_size_ = 2 * size;
+        max_buffer_size_ = max_buffer_size_ <= MAX_BUFFER_SIZE ? max_buffer_size_ : MAX_BUFFER_SIZE;
         buffer_ = new BUFFER_TYPE[max_buffer_size_];
     }
 }
@@ -56,7 +57,7 @@ BUFSIZE_T ByteBuffer::clear(void)
 BUFSIZE_T ByteBuffer::set_extern_buffer(BUFFER_PTR exbuf, int buff_size)
 {
     if (exbuf == nullptr || buff_size <= 0) {
-        return -1;
+        return 0;
     }
 
     if (buffer_ == nullptr) {
@@ -86,26 +87,36 @@ void ByteBuffer::next_write_pos(int offset)
 BUFSIZE_T ByteBuffer::data_size(void) const
 {
     
-    return data_size_ <= 0 ? 0 : data_size_;
+    return data_size_ <= 0 || data_size_ >= MAX_BUFFER_SIZE ? 0 : data_size_;
 }
 
 BUFSIZE_T ByteBuffer::idle_size() const 
 {
     // -1 是为了留出一位，防止写满和为空的时候，
     // start_write和start_read都指向同一个位置，无法辨认
+    std::cout << "idle_data_size: " << data_size_ << std::endl;
+    std::cout << "max_buffer_size: " << max_buffer_size_ << std::endl;
     return (max_buffer_size_ <= 0 || max_buffer_size_ <= data_size_ ? 0 : max_buffer_size_ - data_size_ - 1);
+}
+
+BUFSIZE_T ByteBuffer::max_size(void) const
+{
+    // -1 是为了留出一位，防止写满和为空的时候，
+    // start_write和start_read都指向同一个位置，无法辨认
+    return MAX_BUFFER_SIZE - 1;
 }
 
 BUFSIZE_T 
 ByteBuffer::resize(BUFSIZE_T size)
 {
     // 重新分配的空间不能比当前小
-    if (size < 0 || size <= max_buffer_size_ || size >= MAX_BUFFER_SIZE + 1)
+    if (size < 0 || size <= max_buffer_size_)
     {
-        return -1;
+        return 0;
     }
 
-    BUFSIZE_T new_size = (2*size) <= MAX_BUFFER_SIZE ? 2 * size : MAX_BUFFER_SIZE + 1;
+    BUFSIZE_T new_size = 2 * size;
+    new_size = new_size <= MAX_BUFFER_SIZE ? new_size : MAX_BUFFER_SIZE;
     BUFFER_PTR new_buffer = new BUFFER_TYPE[new_size];
 
     ByteBuffer tmp_buf = *this;
@@ -142,13 +153,13 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 {
     if (data == nullptr || size <= 0) {
         fprintf(stderr, "output buffer(data) is null!");
-        return -1;
+        return 0;
     }
 
     if (this->idle_size() <= size) {
         int ret = this->resize(max_buffer_size_ + size);
         if (ret == -1) {
-           return -1;
+           return 0;
         }
     }
 
@@ -177,12 +188,12 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
 {
     if (data == nullptr  || size <= 0) {
         fprintf(stderr, "output buffer(data) is null!");
-        return -1;
+        return 0;
     }
    
     if (this->data_size() < size) {
         fprintf(stderr, "ByteBuffer remain data(%ld) is less than size(%ld)!", this->data_size(), size);
-        return -1;
+        return 0;
     }
 
     BUFSIZE_T copy_size = size;
@@ -235,7 +246,7 @@ ByteBuffer::read_string(string &str, BUFSIZE_T str_size)
 {
     if (this->empty()) {
         fprintf(stderr, "ByteBuffer is empty!");
-        return -1;
+        return 0;
     }
 
     if (str_size == -1) {
@@ -244,8 +255,8 @@ ByteBuffer::read_string(string &str, BUFSIZE_T str_size)
 
     char *str_ptr = new char[str_size + 1];
     BUFSIZE_T ret =  this->copy_data_from_buffer(str_ptr, str_size);
-    if (ret == -1) {
-        return -1;
+    if (ret == 0) {
+        return 0;
     }
     str_ptr[str_size] = '\0';
     str = str_ptr;
@@ -259,7 +270,7 @@ ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == nullptr) {
         fprintf(stderr, "output buffer(data) is null!");
-        return -1;
+        return 0;
     }
 
     return this->copy_data_from_buffer(buf, buf_size);
@@ -299,7 +310,7 @@ BUFSIZE_T ByteBuffer::write_bytes(const void *buf, BUFSIZE_T buf_size, bool matc
 {
     if (buf == NULL) {
         fprintf(stderr, "output buffer(data) is null!");
-        return -1;
+        return 0;
     }
 
     return this->copy_data_to_buffer(buf, buf_size);
@@ -425,22 +436,22 @@ BUFSIZE_T ByteBuffer::write_bytes_lock(const void *buf, BUFSIZE_T buf_size, bool
 int ByteBuffer::read_int16_ntoh(int16_t &val)
 {
     int ret = this->read_int16(val);
-    if (ret == -1) {
-        return -1;
+    if (ret == 0) {
+        return 0;
     }
     val = ntohs(val);
 
-    return 0;
+    return ret;
 }
 int ByteBuffer::read_int32_ntoh(int32_t &val)
 {
     int ret = this->read_int32(val);
-    if (ret == -1) {
-        return -1;
+    if (ret == 0) {
+        return 0;
     }
     val = ntohl(val);
 
-    return 0;
+    return ret;
 }
 
 int ByteBuffer::write_int16_hton(const int16_t &val)
@@ -467,7 +478,7 @@ ByteBuffer
 operator+(ByteBuffer &lhs, ByteBuffer &rhs)
 {
     // +10 为了提高冗余；
-    ByteBuffer out(lhs.data_size() + rhs.data_size()+10);
+    ByteBuffer out(lhs.data_size() + rhs.data_size());
 
     for (auto iter = lhs.begin(); iter != lhs.end(); ++iter) {
         out.write_int8(*iter);

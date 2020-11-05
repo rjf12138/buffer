@@ -306,7 +306,6 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         n = n * 2;
     }
 
-    BUFSIZE_T max_size = MAX_BUFFER_SIZE;
     // 将空间写满,再读出来
     BUFSIZE_T write_cnt = 0, read_cnt = 0;
     ByteBuffer max_buff;
@@ -319,7 +318,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_EQ(max_buff.data_size(), (max_size));
+    ASSERT_EQ(max_buff.data_size(), max_buff.max_size());
     ASSERT_EQ(max_buff.idle_size(), 0);
 
     // 读 8 位数据
@@ -331,7 +330,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         read_cnt++;
     }
-    ASSERT_EQ(max_buff.idle_size(), max_size);
+    ASSERT_EQ(max_buff.idle_size(), max_buff.max_size());
     ASSERT_EQ(max_buff.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
     // 同一缓存再次写满
@@ -342,7 +341,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_EQ(max_buff.data_size(), max_size);
+    ASSERT_EQ(max_buff.data_size(), max_buff.max_size());
     ASSERT_EQ(max_buff.idle_size(), 0);
 
     // 读 8 位数据
@@ -354,7 +353,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         read_cnt++;
     }
-    ASSERT_EQ(max_buff.idle_size(), max_size);
+    ASSERT_EQ(max_buff.idle_size(), max_buff.max_size());
     ASSERT_EQ(max_buff.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
 
@@ -362,52 +361,52 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
     write_cnt = 0, read_cnt = 0;
     ByteBuffer buff16;
     // 写 16 位数据
-    int16_t data16 = 2345;
+    int16_t data16 = 23456;
     while(true) {
-        BUFSIZE_T ret = max_buff.write_int16(data16);
+        BUFSIZE_T ret = buff16.write_int16(data16);
         if (ret != sizeof(int16_t)) {
             break;
         }
         write_cnt++;
     }
     
-    ASSERT_GT((BUFSIZE_T)sizeof(int16_t), max_size - buff16.data_size());
-    ASSERT_LE(max_buff.idle_size(), (BUFSIZE_T)sizeof(int16_t));
+    ASSERT_GT((BUFSIZE_T)sizeof(int16_t), buff16.max_size() - buff16.data_size());
+    ASSERT_LE(buff16.idle_size(), (BUFSIZE_T)sizeof(int16_t));
 
     // 读 16 位数据
     while(true) {
         int16_t data;
-        BUFSIZE_T ret = max_buff.read_int16(data);
+        BUFSIZE_T ret = buff16.read_int16(data);
         if (ret != sizeof(int16_t) || data != data16) {
             break;
         }
         read_cnt++;
     }
-    ASSERT_EQ(max_buff.idle_size(), max_size);
-    ASSERT_EQ(max_buff.data_size(), 0);
+    ASSERT_EQ(buff16.idle_size(), buff16.max_size());
+    ASSERT_EQ(buff16.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
     write_cnt = read_cnt = 0;
     // 再次写满
     while(true) {
-        BUFSIZE_T ret = max_buff.write_int16(data16);
+        BUFSIZE_T ret = buff16.write_int16(data16);
         if (ret != sizeof(int16_t)) {
             break;
         }
         write_cnt++;
     }
-    ASSERT_GT((BUFSIZE_T)sizeof(int16_t), max_size - buff16.data_size());
-    ASSERT_LE(max_buff.idle_size(), (BUFSIZE_T)sizeof(int16_t));
+    ASSERT_GT((BUFSIZE_T)sizeof(int16_t), buff16.max_size() - buff16.data_size());
+    ASSERT_LE(buff16.idle_size(), (BUFSIZE_T)sizeof(int16_t));
     // 读 16 位数据
     while(true) {
         int16_t data;
-        BUFSIZE_T ret = max_buff.read_int16(data);
+        BUFSIZE_T ret = buff16.read_int16(data);
         if (ret != sizeof(int16_t) || data != data16) {
             break;
         }
         read_cnt++;
     }
-    ASSERT_EQ(max_buff.idle_size(), max_size);
-    ASSERT_EQ(max_buff.data_size(), 0);
+    ASSERT_EQ(buff16.idle_size(), buff16.max_size());
+    ASSERT_EQ(buff16.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
     ////////////////////////////////// 16 ////////////////////////////////////////
     // 读 string 数据
@@ -423,7 +422,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_GT((BUFSIZE_T)str.length(), max_size - buffbyte.data_size());
+    ASSERT_GT((BUFSIZE_T)str.length(), buffbyte.max_size() - buffbyte.data_size());
     ASSERT_LE(buffbyte.idle_size(), (BUFSIZE_T)str.length());
 
     while(true) {
@@ -435,7 +434,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         read_cnt++;
     }
 
-    ASSERT_EQ(buffbyte.idle_size(), max_size);
+    ASSERT_EQ(buffbyte.idle_size(), buffbyte.max_size());
     ASSERT_EQ(buffbyte.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
 
@@ -448,7 +447,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         write_cnt++;
     }
-    ASSERT_GT((BUFSIZE_T)str.length(), max_size - buffbyte.data_size());
+    ASSERT_GT((BUFSIZE_T)str.length(), buffbyte.max_size() - buffbyte.data_size());
     ASSERT_LE(buffbyte.idle_size(), (BUFSIZE_T)str.length());
 
 
@@ -461,7 +460,65 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         }
         read_cnt++;
     }
-    ASSERT_EQ(buffbyte.idle_size(), max_size);
+    ASSERT_EQ(buffbyte.idle_size(), buffbyte.max_size());
+    ASSERT_EQ(buffbyte.data_size(), 0);
+    ASSERT_EQ(write_cnt, read_cnt);
+
+    //////////////////////////////////// 多字节读写 ////////////////////////////////////////////
+    // 读 多字节 数据
+    write_cnt = 0, read_cnt = 0;
+    buffbyte.clear();
+
+    // 写 多字节 数据
+    struct test_stru stru = {'b', 12345, "Nice to meet you", "hello"};
+    BUFSIZE_T data_size = sizeof(stru);
+    while(true) {
+        BUFSIZE_T ret = buffbyte.write_bytes(&stru, data_size);
+        if (ret != data_size) {
+            break;
+        }
+        write_cnt++;
+    }
+    ASSERT_GT(data_size, buffbyte.max_size() - buffbyte.data_size());
+    ASSERT_LE(buffbyte.idle_size(), data_size);
+
+    while(true) {
+        struct test_stru read_stru;
+        BUFSIZE_T ret = buffbyte.read_bytes(&read_stru, data_size);
+        if (ret != data_size || memcmp(&stru, &read_stru, sizeof(stru)) != 0) {
+            break;
+        }
+        read_cnt++;
+    }
+
+    ASSERT_EQ(buffbyte.idle_size(), buffbyte.max_size());
+    ASSERT_EQ(buffbyte.data_size(), 0);
+    ASSERT_EQ(write_cnt, read_cnt);
+
+    write_cnt = 0, read_cnt = 0;
+    // 再次写满
+    while(true) {
+        BUFSIZE_T ret = buffbyte.write_bytes(&stru, data_size);
+        if (ret != data_size) {
+            break;
+        }
+        write_cnt++;
+    }
+    ASSERT_GT(data_size, buffbyte.max_size() - buffbyte.data_size());
+    ASSERT_LE(buffbyte.idle_size(), data_size);
+
+
+    // 再次读 多字节 位数据
+    while(true) {
+        struct test_stru read_stru;
+        BUFSIZE_T ret = buffbyte.read_bytes(&read_stru, data_size);
+        if (ret != data_size || memcmp(&stru, &read_stru, sizeof(stru)) != 0) {
+            break;
+        }
+        read_cnt++;
+    }
+
+    ASSERT_EQ(buffbyte.idle_size(), buffbyte.max_size());
     ASSERT_EQ(buffbyte.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
 }

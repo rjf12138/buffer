@@ -68,6 +68,8 @@ public:
     bool empty(void) const;
     BUFSIZE_T data_size(void) const;
     BUFSIZE_T idle_size(void) const;
+    // 可分配的最大空间
+    BUFSIZE_T max_size(void) const;
     BUFSIZE_T clear(void);
     BUFSIZE_T set_extern_buffer(BUFFER_PTR exbuf, int buff_size);
 
