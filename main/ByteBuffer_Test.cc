@@ -9,6 +9,12 @@ namespace project {
 namespace {
 
 #define MUTITHREAD 1
+#define TEST_SPCE_INCREASE 26
+
+#define TEST_THREAD_NUM 1000
+#define TEST_COUNT 8000
+
+//#define TEST_WRITE_ALL_BUFF 
 
 class ByteBuffer_Test : public ::testing::Test {
 protected:
@@ -286,7 +292,6 @@ TEST_F(ByteBuffer_Test, ByteBuff_none_lock_read_write)
 }
 
 // 测试 buffer 空间增长，压力测试
-#define TEST_SPCE_INCREASE 26
 TEST_F(ByteBuffer_Test, ByteBuffer_increase)
 {
     ByteBuffer buff(1);
@@ -307,6 +312,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
         n = n * 2;
     }
 
+#ifdef TEST_WRITE_ALL_BUFF
     // 将空间写满,再读出来
     BUFSIZE_T write_cnt = 0, read_cnt = 0;
     ByteBuffer max_buff;
@@ -522,10 +528,9 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
     ASSERT_EQ(buffbyte.idle_size(), MAX_DATA_SIZE);
     ASSERT_EQ(buffbyte.data_size(), 0);
     ASSERT_EQ(write_cnt, read_cnt);
+#endif
 }
 
-#define TEST_THREAD_NUM 1000
-#define TEST_COUNT 8000
 
 TEST_F(ByteBuffer_Test, mutil_thread_read_write)
 {
@@ -632,6 +637,21 @@ TEST_F(ByteBuffer_Test, copy_test)
         dest.clear();
         src.clear();
     }
+}
+
+TEST_F(ByteBuffer_Test, iterator)
+{
+    ByteBuffer buff;
+
+    string str = "Hello, world! Everyone";
+    buff.write_string(str);
+
+    string read_str;
+    for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
+        read_str += *iter;
+    }
+
+    ASSERT_EQ(read_str, str);
 }
 
 }  // namespace
