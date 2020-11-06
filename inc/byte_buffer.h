@@ -129,7 +129,7 @@ class ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t>
 public:
     ByteBuffer_Iterator(void) = default;
     explicit ByteBuffer_Iterator(const ByteBuffer *buff)
-            : buff_(buff), curr_pos_(){}
+            : buff_(buff), curr_pos_(buff->start_read_pos_){}
 
     ByteBuffer_Iterator begin() 
     {

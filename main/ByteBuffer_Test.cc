@@ -490,7 +490,7 @@ TEST_F(ByteBuffer_Test, ByteBuffer_increase)
     ASSERT_LE(buffbyte.idle_size(), data_size);
 
     while(true) {
-        struct test_stru read_stru;
+        struct test_stru read_stru = {'a', 0, "", ""};
         BUFSIZE_T ret = buffbyte.read_bytes(&read_stru, data_size);
         if (ret != data_size || memcmp(&stru, &read_stru, sizeof(stru)) != 0) {
             break;
@@ -644,14 +644,93 @@ TEST_F(ByteBuffer_Test, iterator)
     ByteBuffer buff;
 
     string str = "Hello, world! Everyone";
-    buff.write_string(str);
+    string str2= "Good Morning! Everyone...";
 
-    string read_str;
-    for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
-        read_str += *iter;
+    // 两个字符串交叉写
+    for (int i = 0; i < 5000; ++i) {
+        if (i % 2 == 0) {
+            buff.write_string(str);
+        } else {
+            buff.write_string(str2);
+        }
     }
 
-    ASSERT_EQ(read_str, str);
+    UNBUFSIZE_T read_cnt = 0;
+    bool choose_read_str = false;
+    ByteBuffer_Iterator iter = buff.begin();
+    for (UNBUFSIZE_T i = 0; i < (UNBUFSIZE_T)buff.data_size(); ++i) {
+        if (choose_read_str == false) {
+            ASSERT_EQ(*(iter + i), str[read_cnt]);
+            read_cnt++;
+            if (read_cnt == str.length()) {
+                read_cnt = 0;
+                choose_read_str = true;
+            }
+        } else {
+            ASSERT_EQ(*(iter + i), str2[read_cnt]);
+            read_cnt++;
+            if (read_cnt == str2.length()) {
+                read_cnt = 0;
+                choose_read_str = false;
+            }
+        }
+    }
+
+    string read_str;
+    read_cnt = str.length();
+    choose_read_str = false;
+    for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
+        read_str += *iter;
+        read_cnt--;
+        if (read_cnt == 0) {
+            if (choose_read_str == false) {
+                ASSERT_EQ(read_str, str);
+                read_cnt = str2.length();
+                choose_read_str = true;
+                read_str = "";
+            } else {
+                ASSERT_EQ(read_str, str2);
+                read_cnt = str.length();
+                choose_read_str = false;
+                read_str = "";
+            }
+        }
+    }
+    buff.read_string(read_str);
+
+    // 单个字符串循环写
+    for (int i = 0;i < 36000; ++i) {
+        read_str = "";
+        buff.write_string(str);
+        for (auto iter = buff.begin(); iter != buff.end(); ++iter) {
+            read_str += *iter;
+        }
+        ASSERT_EQ(str, read_str);
+        buff.read_string(read_str);
+    }
+
+    // 测试判等
+    bool throw_error = false;
+    ByteBuffer buff1, buff2;
+    ByteBuffer_Iterator iter1, iter2;
+
+    iter1 = buff1.begin();
+    iter2 = buff2.begin();
+
+    ASSERT_NE(iter1, iter2);
+    iter2 = iter1;
+    ASSERT_EQ(iter1, iter2);
+
+    //测试异常抛出
+    try {
+        char ch = *iter1;
+        ch = ch + 1;
+    } catch (runtime_error &e) {
+        throw_error = true;
+    }
+    ASSERT_EQ(throw_error, true);
+
+    
 }
 
 }  // namespace
