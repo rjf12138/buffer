@@ -722,6 +722,7 @@ TEST_F(ByteBuffer_Test, iterator)
     ASSERT_EQ(iter1, iter2);
 
     //测试异常抛出
+    throw_error = false;
     try {
         char ch = *iter1;
         ch = ch + 1;
@@ -730,7 +731,28 @@ TEST_F(ByteBuffer_Test, iterator)
     }
     ASSERT_EQ(throw_error, true);
 
-    
+    // 测试前置，后置加减
+    ByteBuffer buff_plus;
+    buff_plus.write_string("helxo world");
+
+    iter = buff_plus.begin();
+    ASSERT_EQ(*iter, 'h');
+    iter++;
+    ASSERT_EQ(*iter, 'e');
+    ByteBuffer_Iterator iter_back_plus = iter++;
+    ASSERT_EQ(*iter_back_plus, 'e');
+    ASSERT_EQ(*iter, 'l');
+    ByteBuffer_Iterator iter_front_plus = ++iter;
+    ASSERT_EQ(*iter, 'x');
+    ASSERT_EQ(*iter_front_plus, 'x');
+
+    ByteBuffer_Iterator iter_back_des = iter--;
+    ASSERT_EQ(*iter_back_des, 'x');
+    ASSERT_EQ(*iter, 'l');
+    ByteBuffer_Iterator iter_front_des = --iter;
+    ASSERT_EQ(*iter, 'e');
+    ASSERT_EQ(*iter_front_des, 'e');
+
 }
 
 }  // namespace

@@ -209,7 +209,7 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
     while (true)
     {
         BUFSIZE_T read_size = this->get_cont_read_size() > copy_size ? copy_size : this->get_cont_read_size();
-        memmove(data_ptr, this->get_read_buffer_ptr(), read_size);
+        memmove(data_ptr, this->get_read_buffer_ptr(), (size_t)read_size);
         this->update_read_pos(read_size);
         data_ptr = data_ptr + read_size;
         
@@ -307,7 +307,7 @@ ByteBuffer::write_int64(int64_t val)
 }
 
 BUFSIZE_T
-ByteBuffer::write_string(string &str, BUFSIZE_T str_size)
+ByteBuffer::write_string(const string &str, BUFSIZE_T str_size)
 {
     return this->copy_data_to_buffer(str.c_str(), str.length());
 }
@@ -372,7 +372,8 @@ ByteBuffer::read_string_lock(string &str, BUFSIZE_T str_size)
     return ret_size;
 }
 
-BUFSIZE_T ByteBuffer::read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match)
+BUFSIZE_T 
+ByteBuffer::read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match)
 {
     lock_.lock();
     BUFSIZE_T ret_size = this->read_bytes(buf, buf_size, match);
@@ -422,7 +423,7 @@ ByteBuffer::write_int64_lock(int64_t val)
 }
 
 BUFSIZE_T
-ByteBuffer::write_string_lock(string &str, BUFSIZE_T str_size)
+ByteBuffer::write_string_lock(const string &str, BUFSIZE_T str_size)
 {
     lock_.lock();
     BUFSIZE_T ret_size = this->write_string(str, str_size);

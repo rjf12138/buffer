@@ -40,7 +40,7 @@ public:
     BUFSIZE_T write_int16(int16_t val);
     BUFSIZE_T write_int32(int32_t val);
     BUFSIZE_T write_int64(int64_t val);
-    BUFSIZE_T write_string(string &str, BUFSIZE_T str_size = -1);
+    BUFSIZE_T write_string(const string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T write_bytes(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
     BUFSIZE_T read_int8_lock(int8_t &val);
@@ -54,7 +54,7 @@ public:
     BUFSIZE_T write_int16_lock(int16_t val);
     BUFSIZE_T write_int32_lock(int32_t val);
     BUFSIZE_T write_int64_lock(int64_t val);
-    BUFSIZE_T write_string_lock(string &str, BUFSIZE_T str_size = -1);
+    BUFSIZE_T write_string_lock(const string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T write_bytes_lock(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
     // 网络字节序转换
@@ -127,7 +127,8 @@ class ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t>
 {
     friend class ByteBuffer;
 public:
-    ByteBuffer_Iterator(void) = default;
+    ByteBuffer_Iterator(void)
+        : buff_(nullptr), curr_pos_(0) {}
     explicit ByteBuffer_Iterator(const ByteBuffer *buff)
             : buff_(buff), curr_pos_(buff->start_read_pos_){}
 
