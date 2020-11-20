@@ -29,7 +29,7 @@
 		"ByteBuffer_Test.cc"
 	],
 	"程序参数":"#",
-	"编译方式":"release",
+	"编译方式":"debug",
 	"静态库目录列表":[
 		"./lib/debug/",
 		"./lib/release/",

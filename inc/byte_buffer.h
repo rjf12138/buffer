@@ -2,9 +2,8 @@
 #define __BUFFER_H__
 
 #include "basic_head.h"
-#include "mutex.h"
 
-namespace my_util {
+namespace my_utils {
 
 #define MAX_BUFFER_SIZE     1073741824 // 1*1024*1024*1024 (1GB)
 #define MAX_DATA_SIZE       1073741823 // 多的一个字节用于防止，缓存写满时，start_write 和 start_read 重合而造成分不清楚是写满了还是没写
@@ -42,20 +41,6 @@ public:
     BUFSIZE_T write_int64(int64_t val);
     BUFSIZE_T write_string(const string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T write_bytes(const void *buf, BUFSIZE_T buf_size, bool match = false);
-
-    BUFSIZE_T read_int8_lock(int8_t &val);
-    BUFSIZE_T read_int16_lock(int16_t &val);
-    BUFSIZE_T read_int32_lock(int32_t &val);
-    BUFSIZE_T read_int64_lock(int64_t &val);
-    BUFSIZE_T read_string_lock(string &str, BUFSIZE_T str_size = -1);
-    BUFSIZE_T read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match = false);
-
-    BUFSIZE_T write_int8_lock(int8_t val);
-    BUFSIZE_T write_int16_lock(int16_t val);
-    BUFSIZE_T write_int32_lock(int32_t val);
-    BUFSIZE_T write_int64_lock(int64_t val);
-    BUFSIZE_T write_string_lock(const string &str, BUFSIZE_T str_size = -1);
-    BUFSIZE_T write_bytes_lock(const void *buf, BUFSIZE_T buf_size, bool match = false);
 
     // 网络字节序转换
     // 将缓存中的数据读取出来并转成主机字节序返回
@@ -109,7 +94,6 @@ private:
 
 private:
     BUFFER_PTR buffer_;
-    Mutex lock_;
 
     BUFSIZE_T start_read_pos_;
     BUFSIZE_T start_write_pos_;

@@ -1,6 +1,6 @@
 #include "byte_buffer.h"
 
-namespace my_util {
+namespace my_utils {
 
 ByteBuffer::ByteBuffer(BUFSIZE_T size)
 : start_read_pos_(0), start_write_pos_(0), used_data_size_(0)
@@ -320,124 +320,6 @@ BUFSIZE_T ByteBuffer::write_bytes(const void *buf, BUFSIZE_T buf_size, bool matc
     }
 
     return this->copy_data_to_buffer(buf, buf_size);
-}
-
-BUFSIZE_T
-ByteBuffer::read_int8_lock(int8_t &val)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->read_int8(val);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::read_int16_lock(int16_t &val)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->read_int16(val);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::read_int32_lock(int32_t &val)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->read_int32(val);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::read_int64_lock(int64_t &val)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->read_int64(val);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::read_string_lock(string &str, BUFSIZE_T str_size)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->read_string(str, str_size);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T 
-ByteBuffer::read_bytes_lock(void *buf, BUFSIZE_T buf_size, bool match)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->read_bytes(buf, buf_size, match);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::write_int8_lock(int8_t val)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->write_int8(val);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::write_int16_lock(int16_t val)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->write_int16(val);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::write_int32_lock(int32_t val)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->write_int32(val);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::write_int64_lock(int64_t val)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->write_int64(val);
-    lock_.unlock();
-
-    return ret_size;
-}
-
-BUFSIZE_T
-ByteBuffer::write_string_lock(const string &str, BUFSIZE_T str_size)
-{
-    lock_.lock();
-    BUFSIZE_T ret_size = this->write_string(str, str_size);
-    lock_.unlock();
-
-    return ret_size;
-}
-BUFSIZE_T ByteBuffer::write_bytes_lock(const void *buf, BUFSIZE_T buf_size, bool match)
-{
-    lock_.lock();
-    int ret_size = this->write_bytes(buf, buf_size, match);
-    lock_.unlock();
-
-    return ret_size;
 }
 
 int ByteBuffer::read_int16_ntoh(int16_t &val)
