@@ -1,8 +1,7 @@
 #include "byte_buffer.h"
-#include "thread.h"
 #include "gtest/gtest.h"
 
-using namespace my_util;
+using namespace my_utils;
 
 namespace my {
 namespace project {
