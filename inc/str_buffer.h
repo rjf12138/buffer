@@ -3,7 +3,7 @@
 
 #include "basic_head.h"
 
-namespace my_util {
+namespace my_utils {
 
 class StrBuffer {
 public:

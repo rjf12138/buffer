@@ -1,6 +1,6 @@
 #include "str_buffer.h"
 
-namespace my_util {
+namespace my_utils {
 
 StrBuffer::StrBuffer(const string &str)
     :str_buffer_(str)
