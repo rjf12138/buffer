@@ -153,7 +153,6 @@ ByteBuffer::end(void) const
 BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 {
     if (data == nullptr || size <= 0) {
-        fprintf(stderr, "output buffer(data) is null!");
         return 0;
     }
 
@@ -193,7 +192,6 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
 BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
 {
     if (data == nullptr  || size <= 0) {
-        fprintf(stderr, "output buffer(data) is null!");
         return 0;
     }
    
@@ -251,7 +249,6 @@ BUFSIZE_T
 ByteBuffer::read_string(string &str, BUFSIZE_T str_size)
 {
     if (this->empty()) {
-        fprintf(stderr, "ByteBuffer is empty!");
         return 0;
     }
 
@@ -275,7 +272,6 @@ BUFSIZE_T
 ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == nullptr) {
-        fprintf(stderr, "output buffer(data) is null!");
         return 0;
     }
 
@@ -315,7 +311,6 @@ ByteBuffer::write_string(const string &str, BUFSIZE_T str_size)
 BUFSIZE_T ByteBuffer::write_bytes(const void *buf, BUFSIZE_T buf_size, bool match)
 {
     if (buf == NULL) {
-        fprintf(stderr, "output buffer(data) is null!");
         return 0;
     }
 

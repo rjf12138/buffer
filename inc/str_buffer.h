@@ -2,19 +2,22 @@
 #define __STR_UTIL_H__
 
 #include "basic_head.h"
+#include "byte_buffer.h"
 
 namespace my_utils {
 
 class StrBuffer {
 public:
-    StrBuffer(const string &str);
+    StrBuffer(ByteBuffer &buff);
     ~StrBuffer(void);
 
-    vector<string> split_str(const string& separator);
-    string remove_str_from_buffer(const string& str2); // WRANNING
+    vector<ByteBuffer> split(ByteBuffer &buff);
+    ByteBuffer remove_substr(ByteBuffer &buff);
+
 private:
-    string str_buffer_;
-    vector<string> split_strs_;
+    std::pair<ByteBuffer_Iterator, ByteBuffer_Iterator> match_sub(ByteBuffer_Iterator start_pos, ByteBuffer &buff);
+private:
+    ByteBuffer buffer_;
 };
 
 }
