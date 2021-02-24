@@ -39,6 +39,11 @@ ByteBuffer::ByteBuffer(const ByteBuffer &buff)
     }
 }
 
+ByteBuffer::ByteBuffer(BUFFER_PTR data, BUFSIZE_T size)
+{
+    this->write_bytes(data, size);
+}
+
 ByteBuffer::~ByteBuffer()
 {
     this->clear();
@@ -58,20 +63,6 @@ BUFSIZE_T ByteBuffer::clear(void)
     max_buffer_size_ = 0;
 
     return 0;
-}
-
-BUFSIZE_T ByteBuffer::set_extern_buffer(BUFFER_PTR exbuf, int buff_size)
-{
-    if (exbuf == nullptr || buff_size <= 0) {
-        return 0;
-    }
-
-    this->clear();
-    max_buffer_size_ = buff_size;
-    free_data_size_ = max_buffer_size_ - 1;
-    buffer_ = exbuf;
-
-    return buff_size;
 }
 
 void ByteBuffer::next_read_pos(int offset)
@@ -327,6 +318,7 @@ int ByteBuffer::read_int16_ntoh(int16_t &val)
 
     return ret;
 }
+
 int ByteBuffer::read_int32_ntoh(int32_t &val)
 {
     int ret = this->read_int32(val);
@@ -354,6 +346,21 @@ int ByteBuffer::write_int32_hton(const int32_t &val)
     int  ret = this->write_int32(tmp);
 
     return ret;
+}
+
+BUFSIZE_T //=====TODO
+ByteBuffer::get_data(ByteBuffer &out, const ByteBuffer_Iterator &copy_start, BUFSIZE_T copy_size)
+{
+    if (this->buffer_ == nullptr) {
+        return 0;
+    }
+
+    if (copy_start.buff_->buffer_ != this->buffer_) {
+        return 0;
+    }
+
+    out.clear();
+    
 }
 
 //////////////////////// 重载操作符 /////////////////////////
