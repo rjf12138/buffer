@@ -497,13 +497,27 @@ TEST_F(ByteBuffer_Test, iterator)
 
 }
 
+TEST_F(ByteBuffer_Test, operate_buffer)
+{
+    cout << "Hello, world!" << endl;
+}
+
 }  // namespace
 }  // namespace project
 }  // namespace my
 
+// ./test1 -h 查看参数说明
+// ./test1 --gtest_list_tests 查看用例
+// ./test1 运行所有用例
+// ./test1 --gtest_filter=TestClass.Testname1 运行指定用例
+// ./test1 --gtest_filter='TestClass.*' 使用通配符
+// ./test1 --gtest_filter=-TestClass.Testname1 排除指定用例
 
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
+    // int total_size = ::testing::UnitTest::GetInstance()->total_test_suite_count();
+    // ::testing::UnitTest::GetInstance() ;
+    // return 0;
     return RUN_ALL_TESTS();
 }

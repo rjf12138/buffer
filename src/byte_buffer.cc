@@ -65,6 +65,20 @@ BUFSIZE_T ByteBuffer::clear(void)
     return 0;
 }
 
+BUFSIZE_T ByteBuffer::set_extern_buffer(BUFFER_PTR exbuf, int buff_size)
+{
+    if (exbuf == nullptr || buff_size <= 0) {
+        return 0;
+    }
+
+    this->clear();
+    max_buffer_size_ = buff_size;
+    free_data_size_ = max_buffer_size_ - 1;
+    buffer_ = exbuf;
+
+    return buff_size;
+}
+
 void ByteBuffer::next_read_pos(int offset)
 {
     start_read_pos_ = (start_read_pos_ + offset) % max_buffer_size_;
@@ -348,10 +362,10 @@ int ByteBuffer::write_int32_hton(const int32_t &val)
     return ret;
 }
 
-BUFSIZE_T //=====TODO
-ByteBuffer::get_data(ByteBuffer &out, const ByteBuffer_Iterator &copy_start, BUFSIZE_T copy_size)
+BUFSIZE_T
+ByteBuffer::get_data(ByteBuffer &out, ByteBuffer_Iterator &copy_start, BUFSIZE_T copy_size)
 {
-    if (this->buffer_ == nullptr) {
+    if (this->buffer_ == nullptr || copy_size <= 0) {
         return 0;
     }
 
@@ -360,7 +374,14 @@ ByteBuffer::get_data(ByteBuffer &out, const ByteBuffer_Iterator &copy_start, BUF
     }
 
     out.clear();
-    
+    BUFSIZE_T i = 0;
+    ByteBuffer_Iterator tmp = copy_start;
+    for (; i < copy_size && tmp != copy_start.end(); ++i) {
+        out.write_int8(*tmp);
+        ++tmp;
+    }
+
+    return i;
 }
 
 //////////////////////// 重载操作符 /////////////////////////
@@ -451,16 +472,34 @@ ByteBuffer::operator=(const ByteBuffer& src)
     return *this;
 }
 
+BUFFER_TYPE& 
+ByteBuffer::operator[](BUFSIZE_T index)
+{
+    BUFFER_PTR read_ptr = this->get_read_buffer_ptr();
+
+    if (this->data_size() <= 0 || 
+        read_ptr == nullptr ||
+        index >= this->data_size()) {
+        ostringstream ostr;
+        ostr << "Line: " << __LINE__ << " out of range.";
+        throw runtime_error(ostr.str());
+    }
+
+    index = (this->start_read_pos_ + index) %  max_buffer_size_;
+
+    return buffer_[index];
+}
+
 BUFFER_PTR 
 ByteBuffer::get_write_buffer_ptr(void) const
 {
-    return buffer_ + start_write_pos_;
+    return buffer_ == nullptr ? buffer_ + start_write_pos_ : nullptr;
 }
 
 BUFFER_PTR 
 ByteBuffer::get_read_buffer_ptr(void) const
 {
-    return buffer_ + start_read_pos_;
+    return buffer_ == nullptr ? buffer_ + start_read_pos_ : nullptr;
 }
 
 BUFSIZE_T 
@@ -526,5 +565,60 @@ ByteBuffer::update_read_pos(BUFSIZE_T offset)
 
     return ;
 }
+
+///////////////////////////// 操作 ByteBuffer /////////////////////////////
+
+int 
+ByteBuffer::kmp_compute_prefix(ByteBuffer &patten, ByteBuffer &out)
+{
+    out.clear();
+    BUFSIZE_T patten_size = patten.data_size();
+    out.resize(patten_size);
+
+    out[0] = 0;
+    int k = -1;
+    for (BUFSIZE_T q = 1; q < patten_size; ++q) {
+        while (k > -1 && patten[k] != patten[q]) {
+            k = out[k - 1];
+            ++k;
+        }
+
+        if (patten[k + 1] == patten[q]) {
+            k = k + 1;
+        }
+
+        out[q] = k;
+    }
+
+    return 0;
+}
+
+// vector<ByteBuffer> 
+// ByteBuffer::split(const ByteBuffer &buff)
+// {
+
+// }
+
+// vector<ByteBuffer> 
+// ByteBuffer::split(vector<const ByteBuffer> &buffs)
+// {
+
+// }
+
+//     // 将 Bytebuffer 中 buf1 替换为 buf2
+//     ByteBuffer replace(const ByteBuffer &buf1, const ByteBuffer &buf2);
+    
+//     // 返回 ByteBuffer 中所有匹配 buff 的迭代器
+//     std::map<ByteBuffer_Iterator, ByteBuffer_Iterator> find(const ByteBuffer &buff);
+
+//     // 移除 ByteBuff 中所有 buff 的子串
+//     ByteBuffer remove(const ByteBuffer &buff);
+
+//     // 在 ByteBuff 指定迭代器前/后插入子串 buff
+//     ByteBuffer insert_front(ByteBuffer_Iterator &insert_iter, const ByteBuffer &buff);
+//     ByteBuffer insert_back(ByteBuffer_Iterator &insert_iter, const ByteBuffer &buff);
+
+//     // 返回符合模式 regex 的子串(使用正则表达式)
+//     vector<ByteBuffer> match(const ByteBuffer &regex);
 
 }

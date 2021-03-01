@@ -37,7 +37,7 @@ public:
     BUFSIZE_T write_bytes(const void *buf, BUFSIZE_T buf_size, bool match = false);
     
     // 获取 ByteBuffer 迭代器指定范围的数据
-    BUFSIZE_T get_data(ByteBuffer &out, const ByteBuffer_Iterator &copy_start, BUFSIZE_T copy_size);
+    BUFSIZE_T get_data(ByteBuffer &out, ByteBuffer_Iterator &copy_start, BUFSIZE_T copy_size);
 
     // 网络字节序转换
     // 将缓存中的数据读取出来并转成主机字节序返回
@@ -64,6 +64,7 @@ public:
     friend bool operator==(const ByteBuffer &lhs, const ByteBuffer &rhs);
     friend bool operator!=(const ByteBuffer &lhs, const ByteBuffer &rhs);
     ByteBuffer& operator=(const ByteBuffer& src);
+    BUFFER_TYPE& operator[](BUFSIZE_T index);
 
     // 向外面直接提供 buffer_ 指针，它们写是直接写入指针，避免不必要的拷贝
     BUFFER_PTR get_write_buffer_ptr(void) const;
@@ -77,7 +78,7 @@ public:
     void update_write_pos(BUFSIZE_T offset);
     void update_read_pos(BUFSIZE_T offset);
 
-    // 操作ByteBuffer======================
+    // ===================== 操作ByteBuffer ======================
     // 根据 buff 分割 ByteBuffer， buffs 分割 ByteBuffer
     vector<ByteBuffer> split(const ByteBuffer &buff);
     vector<ByteBuffer> split(vector<const ByteBuffer> &buffs);
@@ -111,6 +112,8 @@ private:
     // 从bytebuff中拷贝data个字节到data中
     BUFSIZE_T copy_data_from_buffer(void *data, BUFSIZE_T size);
 
+    // 计算 KMP 字符处理函数的前缀
+    int kmp_compute_prefix(ByteBuffer &patten, ByteBuffer &out);
 private:
     BUFFER_PTR buffer_;
 
