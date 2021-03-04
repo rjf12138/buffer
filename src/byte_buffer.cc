@@ -493,13 +493,13 @@ ByteBuffer::operator[](BUFSIZE_T index)
 BUFFER_PTR 
 ByteBuffer::get_write_buffer_ptr(void) const
 {
-    return buffer_ == nullptr ? buffer_ + start_write_pos_ : nullptr;
+    return buffer_ != nullptr ? buffer_ + start_write_pos_ : nullptr;
 }
 
 BUFFER_PTR 
 ByteBuffer::get_read_buffer_ptr(void) const
 {
-    return buffer_ == nullptr ? buffer_ + start_read_pos_ : nullptr;
+    return buffer_ != nullptr ? buffer_ + start_read_pos_ : nullptr;
 }
 
 BUFSIZE_T 
@@ -569,28 +569,55 @@ ByteBuffer::update_read_pos(BUFSIZE_T offset)
 ///////////////////////////// 操作 ByteBuffer /////////////////////////////
 
 int 
-ByteBuffer::kmp_compute_prefix(ByteBuffer &patten, ByteBuffer &out)
+ByteBuffer::kmp_compute_prefix(std::vector<int> &out)
 {
     out.clear();
-    BUFSIZE_T patten_size = patten.data_size();
+    BUFSIZE_T patten_size = this->data_size();
     out.resize(patten_size);
 
-    out[0] = 0;
-    int k = -1;
-    for (BUFSIZE_T q = 1; q < patten_size; ++q) {
-        while (k > -1 && patten[k] != patten[q]) {
-            k = out[k - 1];
-            ++k;
+    for (int i = 1; i < patten_size; i++)
+    {
+        int j = out[i - 1];
+        while (j > 0 && (*this)[i] != (*this)[j]) {
+            j = out[j - 1];
         }
-
-        if (patten[k + 1] == patten[q]) {
-            k = k + 1;
-        }
-
-        out[q] = k;
+        out[i] = (*this)[i] == (*this)[j] ? j + 1 : 0;
     }
 
-    return 0;
+    return out.size();
+}
+
+std::vector<ByteBuffer_Iterator>
+ByteBuffer::find(ByteBuffer &pattern)
+{
+    std::vector<int> prefix;
+    std::vector<ByteBuffer_Iterator> result;
+    pattern.kmp_compute_prefix(prefix);
+
+    BUFSIZE_T size = this->data_size(), pattern_size = pattern.data_size();
+    if (pattern_size == 0) {
+        return result;
+    }
+
+    int p = 0;
+    for (BUFSIZE_T i = 0; i < size; i++)
+    {
+        while (p > 0 && pattern[p] != (*this)[i]) {
+            p = prefix[p];
+        }
+
+        if ((*this)[i] == pattern[p]) {
+            p++;
+        }
+
+        if (p == pattern_size) {
+            ByteBuffer_Iterator tmp(this);
+            tmp += (i - p + 1);
+            result.push_back(tmp);
+            p = prefix[pattern_size - 1]; //防止出现prefix[pattern_size + 1]的情况出现，这里用prefix[pattern_size - 1]
+        }
+    }
+    return result;
 }
 
 // vector<ByteBuffer> 
@@ -605,11 +632,11 @@ ByteBuffer::kmp_compute_prefix(ByteBuffer &patten, ByteBuffer &out)
 
 // }
 
-//     // 将 Bytebuffer 中 buf1 替换为 buf2
-//     ByteBuffer replace(const ByteBuffer &buf1, const ByteBuffer &buf2);
-    
-//     // 返回 ByteBuffer 中所有匹配 buff 的迭代器
-//     std::map<ByteBuffer_Iterator, ByteBuffer_Iterator> find(const ByteBuffer &buff);
+// ByteBuffer 
+// replace(const ByteBuffer &buf1, const ByteBuffer &buf2)
+// {
+
+// }
 
 //     // 移除 ByteBuff 中所有 buff 的子串
 //     ByteBuffer remove(const ByteBuffer &buff);

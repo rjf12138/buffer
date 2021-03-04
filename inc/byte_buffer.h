@@ -79,15 +79,15 @@ public:
     void update_read_pos(BUFSIZE_T offset);
 
     // ===================== 操作ByteBuffer ======================
+    // 返回 ByteBuffer 中所有匹配 buff 的迭代器
+    std::vector<ByteBuffer_Iterator> find(ByteBuffer &buff);
+    
     // 根据 buff 分割 ByteBuffer， buffs 分割 ByteBuffer
     vector<ByteBuffer> split(const ByteBuffer &buff);
     vector<ByteBuffer> split(vector<const ByteBuffer> &buffs);
 
     // 将 Bytebuffer 中 buf1 替换为 buf2
     ByteBuffer replace(const ByteBuffer &buf1, const ByteBuffer &buf2);
-    
-    // 返回 ByteBuffer 中所有匹配 buff 的迭代器
-    std::map<ByteBuffer_Iterator, ByteBuffer_Iterator> find(const ByteBuffer &buff);
 
     // 移除 ByteBuff 中所有 buff 的子串
     ByteBuffer remove(const ByteBuffer &buff);
@@ -99,7 +99,8 @@ public:
     // 返回符合模式 regex 的子串(使用正则表达式)
     vector<ByteBuffer> match(const ByteBuffer &regex);
 
-private:
+//private:
+public:
     // 设置外部缓存
     BUFSIZE_T set_extern_buffer(BUFFER_PTR exbuf, int buff_size);
     // 下一个读的位置
@@ -113,7 +114,7 @@ private:
     BUFSIZE_T copy_data_from_buffer(void *data, BUFSIZE_T size);
 
     // 计算 KMP 字符处理函数的前缀
-    int kmp_compute_prefix(ByteBuffer &patten, ByteBuffer &out);
+    int kmp_compute_prefix(std::vector<int> &out);
 private:
     BUFFER_PTR buffer_;
 

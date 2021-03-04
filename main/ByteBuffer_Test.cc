@@ -499,7 +499,22 @@ TEST_F(ByteBuffer_Test, iterator)
 
 TEST_F(ByteBuffer_Test, operate_buffer)
 {
-    cout << "Hello, world!" << endl;
+    string pattern = "ab", data = "ababacastababacad::vecababacatoababacar<ByteBuffeababacar_Iteraababacator>ababaca";
+    vector<int> out;
+    ByteBuffer buff, patten;
+
+    patten.write_string(pattern);
+    patten.kmp_compute_prefix(out);
+    for (std::size_t i = 0; i < out.size(); ++i) {
+        cout << out[i] << " ";
+    }
+    cout << endl;
+    buff.write_string(data);
+    vector<ByteBuffer_Iterator> res = buff.find(patten);
+    for (std::size_t i = 0; i < res.size(); ++i) {
+        std::cout << *res[i] << std::endl;
+    }
+    cout << endl;
 }
 
 }  // namespace
