@@ -620,17 +620,31 @@ ByteBuffer::find(ByteBuffer &pattern)
     return result;
 }
 
-// vector<ByteBuffer> 
-// ByteBuffer::split(const ByteBuffer &buff)
-// {
+std::vector<ByteBuffer> 
+ByteBuffer::split(ByteBuffer &buff)
+{
+    std::vector<ByteBuffer> result;
+    std::vector<ByteBuffer_Iterator> find_buff = this->find(buff);
 
-// }
+    ByteBuffer tmp;
+    ByteBuffer_Iterator start_copy_pos = this->begin();
+    for (std::size_t i = 0; i < find_buff.size(); ++i) {
+        BUFSIZE_T copy_size = find_buff[i] - start_copy_pos;
+        this->get_data(tmp, start_copy_pos, copy_size);
+        result.push_back(tmp);
+        start_copy_pos = find_buff[i] + buff.data_size();
+    }
 
-// vector<ByteBuffer> 
-// ByteBuffer::split(vector<const ByteBuffer> &buffs)
-// {
+    return result;
+}
 
-// }
+vector<ByteBuffer> 
+ByteBuffer::split(vector<ByteBuffer> &buffs)
+{
+    for (std::size_t i = 0; i < buffs.size(); ++i) {
+        
+    }
+}
 
 // ByteBuffer 
 // replace(const ByteBuffer &buf1, const ByteBuffer &buf2)

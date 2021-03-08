@@ -83,21 +83,21 @@ public:
     std::vector<ByteBuffer_Iterator> find(ByteBuffer &buff);
     
     // 根据 buff 分割 ByteBuffer， buffs 分割 ByteBuffer
-    vector<ByteBuffer> split(const ByteBuffer &buff);
-    vector<ByteBuffer> split(vector<const ByteBuffer> &buffs);
+    vector<ByteBuffer> split(ByteBuffer &buff);
+    vector<ByteBuffer> split(vector<ByteBuffer> &buffs);
 
     // 将 Bytebuffer 中 buf1 替换为 buf2
-    ByteBuffer replace(const ByteBuffer &buf1, const ByteBuffer &buf2);
+    ByteBuffer replace(ByteBuffer &buf1, ByteBuffer &buf2);
 
     // 移除 ByteBuff 中所有 buff 的子串
-    ByteBuffer remove(const ByteBuffer &buff);
+    ByteBuffer remove(ByteBuffer &buff);
 
     // 在 ByteBuff 指定迭代器前/后插入子串 buff
-    ByteBuffer insert_front(ByteBuffer_Iterator &insert_iter, const ByteBuffer &buff);
-    ByteBuffer insert_back(ByteBuffer_Iterator &insert_iter, const ByteBuffer &buff);
+    ByteBuffer insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff);
+    ByteBuffer insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff);
 
     // 返回符合模式 regex 的子串(使用正则表达式)
-    vector<ByteBuffer> match(const ByteBuffer &regex);
+    vector<ByteBuffer> match(ByteBuffer &regex);
 
 //private:
 public:
@@ -174,6 +174,33 @@ public:
         tmp_iter.curr_pos_ = (tmp_iter.curr_pos_ + buff_->max_buffer_size_ - des)  % buff_->max_buffer_size_;
 
         return tmp_iter;
+    }
+
+    BUFSIZE_T operator-(ByteBuffer_Iterator &rhs)
+    {
+        if (this->check_iterator() == false || rhs.check_iterator() == false) {
+            return 0;
+        }
+
+        if (this->buff_->buffer_ != rhs.buff_->buffer_) {
+            return 0;
+        }
+
+        if (buff_->start_write_pos_ < buff_->start_read_pos_) {
+            if (curr_pos_ > buff_->start_read_pos_ && rhs.curr_pos_ > buff_->start_read_pos_) {
+                return curr_pos_ - rhs.curr_pos_;
+            } else if (curr_pos_ > buff_->start_read_pos_ && rhs.curr_pos_ < buff_->start_read_pos_) {
+                return (curr_pos_ - buff_->max_buffer_size_ + 1) - rhs.curr_pos_;
+            } else if (curr_pos_ < buff_->start_read_pos_ && rhs.curr_pos_ > buff_->start_read_pos_) {
+                return -1 * (rhs.curr_pos_ - buff_->max_buffer_size_ + 1 - curr_pos_);
+            } else if (curr_pos_ < buff_->start_write_pos_ && rhs.curr_pos_ < buff_->start_write_pos_) {
+                return curr_pos_ - rhs.curr_pos_;
+            }
+        } else {
+            return curr_pos_ - rhs.curr_pos_;
+        }
+
+        return 0;
     }
 
     // 前置++
@@ -340,7 +367,7 @@ public:
 
         return *this;
     }
-    
+
     string debug_info(void) {
         ostringstream ostr;
 
