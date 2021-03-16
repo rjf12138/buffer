@@ -499,7 +499,7 @@ TEST_F(ByteBuffer_Test, iterator)
 
 TEST_F(ByteBuffer_Test, operate_buffer)
 {
-    string pattern = "ab", data = "ababacastababacad::vecababacatoababacar<ByteBuffeababacar_Iteraababacator>ababaca";
+    string pattern = "a", data = "ababacastababacad::vecababacatoababacar<ByteBuffeababacar_Iteraababacator>ababacaabdddd";
     vector<int> out;
     ByteBuffer buff, patten;
 
@@ -514,7 +514,15 @@ TEST_F(ByteBuffer_Test, operate_buffer)
     for (std::size_t i = 0; i < res.size(); ++i) {
         std::cout << *res[i] << std::endl;
     }
-    cout << endl;
+    cout << endl << "======== split ========" << endl;
+
+    string str;
+    vector<ByteBuffer> ret = buff.split(patten);
+    cout << "size: " << ret.size() << endl;
+    for (std::size_t i = 0;i < ret.size(); ++i) {
+        ret[i].read_string(str);
+        std::cout << str << std::endl;
+    }
 }
 
 }  // namespace

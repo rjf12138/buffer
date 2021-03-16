@@ -58,6 +58,7 @@ public:
     // 返回起始结束迭代器
     ByteBuffer_Iterator begin(void) const;
     ByteBuffer_Iterator end(void) const;
+    ByteBuffer_Iterator last_data(void) const;
 
     // 重载操作符
     friend ByteBuffer operator+(ByteBuffer &lhs, ByteBuffer &rhs);
@@ -84,13 +85,13 @@ public:
     
     // 根据 buff 分割 ByteBuffer， buffs 分割 ByteBuffer
     vector<ByteBuffer> split(ByteBuffer &buff);
-    vector<ByteBuffer> split(vector<ByteBuffer> &buffs);
 
     // 将 Bytebuffer 中 buf1 替换为 buf2
     ByteBuffer replace(ByteBuffer &buf1, ByteBuffer &buf2);
 
-    // 移除 ByteBuff 中所有 buff 的子串
-    ByteBuffer remove(ByteBuffer &buff);
+    // 移除 ByteBuff 中匹配 buff 的子串
+    // index 指定第几个匹配的子串， index 超出范围时，删除所有匹配子串, index 从0 开始计数
+    ByteBuffer remove(ByteBuffer &buff, BUFSIZE_T index = -1);
 
     // 在 ByteBuff 指定迭代器前/后插入子串 buff
     ByteBuffer insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff);
@@ -399,6 +400,10 @@ private:
                 curr_pos_ = buff_->start_write_pos_;
                 return false;
             }
+        }
+
+        if (this->curr_pos_ == buff_->start_write_pos_) { // 检查当前位置是不是指向了 end()
+            return false;
         }
 
         return true;
