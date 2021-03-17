@@ -664,11 +664,39 @@ ByteBuffer::split(ByteBuffer &buff)
 }
 
 
-// ByteBuffer 
-// replace(const ByteBuffer &buf1, const ByteBuffer &buf2)
-// {
+ByteBuffer 
+ByteBuffer::replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index = -1)
+{
+    ByteBuffer tmp_buf;
+    std::vector<ByteBuffer_Iterator> find_buff = this->find(buf1);
 
-// }
+    if (index < 0 || index >= (BUFSIZE_T)find_buff.size()) {
+        index = -1;
+    }
+
+    
+
+    if (index == -1) {
+        std::vector<ByteBuffer> ret = this->split(buf1);
+        for (std::size_t i = 0; i < ret.size(); ++i) {
+            tmp_buf = tmp_buf + ret[i];
+        }
+    } else {
+        ByteBuffer_Iterator begin_iter = this->begin();
+        BUFSIZE_T copy_size = find_buff[index] - begin_iter;
+
+        ByteBuffer out;
+        this->get_data(out, begin_iter, copy_size);
+        tmp_buf = tmp_buf + out;
+
+        find_buff[index] = find_buff[index] + buf1.data_size();
+        copy_size = this->last_data() - find_buff[index];
+        this->get_data(out, find_buff[index], copy_size);
+        tmp_buf = tmp_buf + out;
+    }
+
+    return tmp_buf;
+}
 
 
 ByteBuffer 

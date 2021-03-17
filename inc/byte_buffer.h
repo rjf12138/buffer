@@ -87,7 +87,7 @@ public:
     vector<ByteBuffer> split(ByteBuffer &buff);
 
     // 将 Bytebuffer 中 buf1 替换为 buf2
-    ByteBuffer replace(ByteBuffer &buf1, ByteBuffer &buf2);
+    ByteBuffer replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index = -1);
 
     // 移除 ByteBuff 中匹配 buff 的子串
     // index 指定第几个匹配的子串， index 超出范围时，删除所有匹配子串, index 从0 开始计数

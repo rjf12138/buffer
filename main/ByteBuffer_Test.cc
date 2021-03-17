@@ -523,6 +523,20 @@ TEST_F(ByteBuffer_Test, operate_buffer)
         ret[i].read_string(str);
         std::cout << str << std::endl;
     }
+
+    patten.clear();
+    patten.write_string("ab");
+    ByteBuffer result = buff.remove(patten);
+    result.read_string(str);
+    std::cout << str << std::endl;
+
+    result = buff.remove(patten, 1);
+    result.read_string(str);
+    std::cout << str << std::endl;
+    
+    result = buff.remove(patten, 3);
+    result.read_string(str);
+    std::cout << str << std::endl;
 }
 
 }  // namespace
