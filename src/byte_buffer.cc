@@ -634,6 +634,10 @@ std::vector<ByteBuffer>
 ByteBuffer::split(ByteBuffer &buff)
 {
     std::vector<ByteBuffer> result;
+    if (buff.data_size() <= 0 || this->data_size() <= 0) {
+        return result;
+    }
+
     std::vector<ByteBuffer_Iterator> find_buff = this->find(buff);
 
     ByteBuffer tmp;
@@ -665,37 +669,48 @@ ByteBuffer::split(ByteBuffer &buff)
 
 
 ByteBuffer 
-ByteBuffer::replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index = -1)
+ByteBuffer::replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index)
 {
     ByteBuffer tmp_buf;
-    std::vector<ByteBuffer_Iterator> find_buff = this->find(buf1);
-
-    if (index < 0 || index >= (BUFSIZE_T)find_buff.size()) {
-        index = -1;
+    if (buf1.data_size() <= 0 || buf2.data_size() <= 0 || this->data_size() <= 0) {
+        return tmp_buf;
     }
 
-    
+    BUFSIZE_T copy_size = 0;
+    ByteBuffer result, tmp;
+    ByteBuffer_Iterator copy_pos_iter = this->begin();
+    std::vector<ByteBuffer_Iterator> find_buff = this->find(buf1);
+    if (find_buff.size() == 0) {
+        return *this;
+    }
 
-    if (index == -1) {
-        std::vector<ByteBuffer> ret = this->split(buf1);
-        for (std::size_t i = 0; i < ret.size(); ++i) {
-            tmp_buf = tmp_buf + ret[i];
+    if (index < 0 || index >= (BUFSIZE_T)find_buff.size()) { // 替换所有
+        for (std::size_t i = 0; i < find_buff.size(); ++i) {
+            copy_size = find_buff[i] - copy_pos_iter;
+            if (copy_size > 0) {
+                this->get_data(tmp, copy_pos_iter, copy_size);
+                result = result + tmp;
+                result = result + buf2;
+                copy_pos_iter = find_buff[i] + buf1.data_size();
+            }
+        }
+
+        copy_size = this->last_data() - copy_pos_iter; // 保存剩余的字符
+        if (copy_size > 0) {
+            this->get_data(tmp, copy_pos_iter, copy_size);
+            result = result + tmp;
         }
     } else {
-        ByteBuffer_Iterator begin_iter = this->begin();
-        BUFSIZE_T copy_size = find_buff[index] - begin_iter;
-
-        ByteBuffer out;
-        this->get_data(out, begin_iter, copy_size);
-        tmp_buf = tmp_buf + out;
-
-        find_buff[index] = find_buff[index] + buf1.data_size();
-        copy_size = this->last_data() - find_buff[index];
-        this->get_data(out, find_buff[index], copy_size);
-        tmp_buf = tmp_buf + out;
+        copy_size = find_buff[index] - copy_pos_iter;
+        if (copy_size > 0) {
+            this->get_data(tmp, copy_pos_iter, copy_size);
+            result = result + tmp;
+            result = result + buf2;
+            copy_pos_iter = find_buff[index] + buf1.data_size();
+        }
     }
 
-    return tmp_buf;
+    return result;
 }
 
 
@@ -703,6 +718,10 @@ ByteBuffer
 ByteBuffer::remove(ByteBuffer &buff, BUFSIZE_T index)
 {
     ByteBuffer tmp_buf;
+    if (buff.data_size() <= 0 || this->data_size() <= 0) {
+        return tmp_buf;
+    }
+    
     std::vector<ByteBuffer_Iterator> find_buff = this->find(buff);
 
     if (index < 0 || index >= (BUFSIZE_T)find_buff.size()) {
@@ -731,11 +750,50 @@ ByteBuffer::remove(ByteBuffer &buff, BUFSIZE_T index)
     return tmp_buf;
 }
 
-    // 在 ByteBuff 指定迭代器前/后插入子串 buff
-    ByteBuffer insert_front(ByteBuffer_Iterator &insert_iter, const ByteBuffer &buff);
-    ByteBuffer insert_back(ByteBuffer_Iterator &insert_iter, const ByteBuffer &buff);
+ByteBuffer 
+ByteBuffer::insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
+{
+    ByteBuffer tmp_buf, result;
+    if (!(insert_iter >= this->begin() && 
+            insert_iter <= this->last_data())) {
+        return tmp_buf;
+    }
+
+    ByteBuffer_Iterator begin_iter = this->begin();
+    BUFSIZE_T copy_front_size = insert_iter - begin_iter;
+    this->get_data(result, begin_iter, copy_front_size);
+    
+    result = result + buff;
+    copy_front_size = this->last_data() - insert_iter + 1;
+    this->get_data(tmp_buf, insert_iter, copy_front_size);
+    result = result + tmp_buf;
+
+    return result;
+}
+
+ByteBuffer 
+ByteBuffer::insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
+{
+    ByteBuffer tmp_buf, result;
+    if (!(insert_iter >= this->begin() && 
+            insert_iter <= this->last_data())) {
+        return tmp_buf;
+    }
+
+    ByteBuffer_Iterator begin_iter = this->begin();
+    BUFSIZE_T copy_front_size = insert_iter - begin_iter + 1;
+    this->get_data(result, begin_iter, copy_front_size);
+    
+    result = result + buff;
+    copy_front_size = this->last_data() - insert_iter;
+    insert_iter++;
+    this->get_data(tmp_buf, insert_iter, copy_front_size);
+    result = result + tmp_buf;
+
+    return result;
+}
 
     // 返回符合模式 regex 的子串(使用正则表达式)
-    vector<ByteBuffer> match(const ByteBuffer &regex);
+    vector<ByteBuffer> match(ByteBuffer &regex);
 
 }
