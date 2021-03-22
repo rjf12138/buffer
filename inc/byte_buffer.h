@@ -19,6 +19,7 @@ class ByteBuffer {
 public:
     ByteBuffer(BUFSIZE_T size = 0);
     ByteBuffer(const ByteBuffer &buff);
+    ByteBuffer(const std::string &str);
     ByteBuffer(BUFFER_PTR data, BUFSIZE_T size);
     virtual ~ByteBuffer();
 
@@ -28,6 +29,7 @@ public:
     BUFSIZE_T read_int64(int64_t &val);
     BUFSIZE_T read_string(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T read_bytes(void *buf, BUFSIZE_T buf_size, bool match = false);
+    std::string str();
 
     BUFSIZE_T write_int8(int8_t val);
     BUFSIZE_T write_int16(int16_t val);

@@ -3,7 +3,12 @@
 namespace my_utils {
 
 ByteBuffer::ByteBuffer(BUFSIZE_T size)
-: start_read_pos_(0), start_write_pos_(0), used_data_size_(0)
+: buffer_(nullptr),
+  start_read_pos_(0), 
+  start_write_pos_(0), 
+  used_data_size_(0),
+  free_data_size_(0),
+  max_buffer_size_(0)
 {
     if (size <= 0)
     {
@@ -24,6 +29,12 @@ ByteBuffer::ByteBuffer(BUFSIZE_T size)
 }
 
 ByteBuffer::ByteBuffer(const ByteBuffer &buff)
+: buffer_(nullptr),
+  start_read_pos_(0), 
+  start_write_pos_(0), 
+  used_data_size_(0),
+  free_data_size_(0),
+  max_buffer_size_(0)
 {
     start_read_pos_ = buff.start_read_pos_;
     start_write_pos_ = buff.start_write_pos_;
@@ -39,7 +50,24 @@ ByteBuffer::ByteBuffer(const ByteBuffer &buff)
     }
 }
 
+ByteBuffer::ByteBuffer(const std::string &str)
+: buffer_(nullptr),
+  start_read_pos_(0), 
+  start_write_pos_(0), 
+  used_data_size_(0),
+  free_data_size_(0),
+  max_buffer_size_(0)
+{
+    this->write_string(str);
+}
+
 ByteBuffer::ByteBuffer(BUFFER_PTR data, BUFSIZE_T size)
+: buffer_(nullptr),
+  start_read_pos_(0), 
+  start_write_pos_(0), 
+  used_data_size_(0),
+  free_data_size_(0),
+  max_buffer_size_(0)
 {
     this->write_bytes(data, size);
 }
@@ -291,6 +319,15 @@ ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
     }
 
     return this->copy_data_from_buffer(buf, buf_size);
+}
+
+std::string 
+ByteBuffer::str()
+{
+    std::string str;
+    this->read_string(str);
+
+    return str;
 }
 
 BUFSIZE_T
@@ -794,6 +831,23 @@ ByteBuffer::insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
 }
 
     // 返回符合模式 regex 的子串(使用正则表达式)
-    vector<ByteBuffer> match(ByteBuffer &regex);
+vector<ByteBuffer> 
+ByteBuffer::match(ByteBuffer &regex_str)
+{
+    vector<ByteBuffer> ret_match_str;
+    std::regex reg(regex_str.str());
+    std::string content(this->str());
+    std::smatch m;
+
+    auto pos = content.cbegin();
+    auto end = content.cend();
+    for (; std::regex_search(pos, end, m, reg); pos = m.suffix().first)
+    {
+        ByteBuffer match_substr(m.str());
+        ret_match_str.push_back(match_substr);
+    }
+
+    return ret_match_str;
+}
 
 }

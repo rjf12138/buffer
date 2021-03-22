@@ -537,6 +537,19 @@ TEST_F(ByteBuffer_Test, operate_buffer)
     result = buff.remove(patten, 3);
     result.read_string(str);
     std::cout << str << std::endl;
+
+
+    // 正则表达式测试
+    buff.clear();
+    patten.clear();
+    patten.write_string("<(.*)>(.*)</(\\1)>");
+    buff.write_string("123<xml>value</xml>456<widget>center</widget>hahaha<vertical>window</vertical>the end");
+
+    ret = buff.match(patten);
+    ASSERT_EQ(ret.size(), 3);
+    ASSERT_EQ(ret[0].str(), std::string("<xml>value</xml>"));
+    ASSERT_EQ(ret[1].str(), std::string("<widget>center</widget>"));
+    ASSERT_EQ(ret[2].str(), std::string("<vertical>window</vertical>"));
 }
 
 }  // namespace
