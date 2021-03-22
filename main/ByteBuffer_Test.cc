@@ -13,6 +13,16 @@ namespace {
 #define TEST_THREAD_NUM 1000
 #define TEST_COUNT 8000
 
+////////////////////////////测试工具函数//////////////////////////////////
+vector<string>
+random_strs(void)
+{
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 //#define TEST_WRITE_ALL_BUFF 
 
 class ByteBuffer_Test : public ::testing::Test {
@@ -496,6 +506,7 @@ TEST_F(ByteBuffer_Test, iterator)
     ASSERT_EQ(*iter_front_des, 'e');
 
 }
+
 
 TEST_F(ByteBuffer_Test, operate_buffer)
 {
