@@ -14,10 +14,33 @@ namespace {
 #define TEST_COUNT 8000
 
 ////////////////////////////测试工具函数//////////////////////////////////
-vector<string>
-random_strs(void)
+vector<ByteBuffer>
+random_str(ByteBuffer &src, ByteBuffer &patten, int gap)
 {
+    ByteBuffer front_str, back_str;
+    vector<ByteBuffer> ret;
 
+    int j = 0;
+    for (auto iter = src.begin(); iter != src.end(); ++iter) {
+        front_str.write_int8(*iter);
+        back_str.write_int8(*iter);
+
+        if (j >= gap) {
+            ByteBuffer_Iterator last_iter = front_str.last_data();
+            front_str.insert_front(last_iter, patten);
+
+            last_iter = back_str.last_data();
+            back_str.insert_back(last_iter, patten);
+            j = 0;
+            continue;
+        }
+        ++j;
+    }
+
+    ret.push_back(front_str);
+    ret.push_back(back_str);
+
+    return ret;
 }
 
 
@@ -510,57 +533,106 @@ TEST_F(ByteBuffer_Test, iterator)
 
 TEST_F(ByteBuffer_Test, operate_buffer)
 {
-    string pattern = "a", data = "ababacastababacad::vecababacatoababacar<ByteBuffeababacar_Iteraababacator>ababacaabdddd";
-    vector<int> out;
-    ByteBuffer buff, patten;
+    for (int i = 0; i < 1000; ++i) {
+        int patten_len = rand() % 20000;
+        int src_len = rand() % 20000;
 
-    patten.write_string(pattern);
-    patten.kmp_compute_prefix(out);
-    for (std::size_t i = 0; i < out.size(); ++i) {
-        cout << out[i] << " ";
+        ByteBuffer patten, src;
+        for (int j = 0;j < patten_len; ++j) {
+            BUFFER_TYPE value = rand() % 256;
+            patten.write_int8(value);
+        }
+
+        for (int j = 0;j < src_len; ++j) {
+            BUFFER_TYPE value = rand() % 256;
+            src.write_int8(value);
+        }
+
+        for (int gap = 0; gap < src.data_size(); ++gap) {
+            vector<ByteBuffer> ret = random_str(src, patten, gap);
+            vector<ByteBuffer> split_1 = ret[0].split(patten);
+            vector<ByteBuffer> split_2 = ret[1].split(patten);
+
+            for (auto iter = src.begin(); iter != src.end(); ++iter) {
+                ASSERT_EQ(split_1[0][0], *iter);
+                ASSERT_EQ(split_1[1][0], *iter);
+            }
+
+            for (int j = 0; j < 1000; ++j) {
+                int replace_len = rand() % 20000;
+                ByteBuffer replace_str;
+                
+                for (int j = 0;j < replace_len; ++j) {
+                    BUFFER_TYPE value = rand() % 256;
+                    replace_str.write_int8(value);
+                }
+
+                ByteBuffer rep1 = ret[0].replace(patten, replace_str);
+                ByteBuffer rep2 = ret[1].replace(patten, replace_str);
+
+                split_1 = rep1.split(patten);
+                split_2 = rep2.split(patten);
+
+                for (auto iter = src.begin(); iter != src.end(); ++iter) {
+                    ASSERT_EQ(split_1[0][0], *iter);
+                    ASSERT_EQ(split_1[1][0], *iter);
+                }
+            }
+
+        }
     }
-    cout << endl;
-    buff.write_string(data);
-    vector<ByteBuffer_Iterator> res = buff.find(patten);
-    for (std::size_t i = 0; i < res.size(); ++i) {
-        std::cout << *res[i] << std::endl;
-    }
-    cout << endl << "======== split ========" << endl;
 
-    string str;
-    vector<ByteBuffer> ret = buff.split(patten);
-    cout << "size: " << ret.size() << endl;
-    for (std::size_t i = 0;i < ret.size(); ++i) {
-        ret[i].read_string(str);
-        std::cout << str << std::endl;
-    }
+    // string pattern = "a", data = "ababacastababacad::vecababacatoababacar<ByteBuffeababacar_Iteraababacator>ababacaabdddd";
+    // vector<int> out;
+    // ByteBuffer buff, patten;
 
-    patten.clear();
-    patten.write_string("ab");
-    ByteBuffer result = buff.remove(patten);
-    result.read_string(str);
-    std::cout << str << std::endl;
+    // patten.write_string(pattern);
+    // patten.kmp_compute_prefix(out);
+    // for (std::size_t i = 0; i < out.size(); ++i) {
+    //     cout << out[i] << " ";
+    // }
+    // cout << endl;
+    // buff.write_string(data);
+    // vector<ByteBuffer_Iterator> res = buff.find(patten);
+    // for (std::size_t i = 0; i < res.size(); ++i) {
+    //     std::cout << *res[i] << std::endl;
+    // }
+    // cout << endl << "======== split ========" << endl;
 
-    result = buff.remove(patten, 1);
-    result.read_string(str);
-    std::cout << str << std::endl;
+    // string str;
+    // vector<ByteBuffer> ret = buff.split(patten);
+    // cout << "size: " << ret.size() << endl;
+    // for (std::size_t i = 0;i < ret.size(); ++i) {
+    //     ret[i].read_string(str);
+    //     std::cout << str << std::endl;
+    // }
+
+    // patten.clear();
+    // patten.write_string("ab");
+    // ByteBuffer result = buff.remove(patten);
+    // result.read_string(str);
+    // std::cout << str << std::endl;
+
+    // result = buff.remove(patten, 1);
+    // result.read_string(str);
+    // std::cout << str << std::endl;
     
-    result = buff.remove(patten, 3);
-    result.read_string(str);
-    std::cout << str << std::endl;
+    // result = buff.remove(patten, 3);
+    // result.read_string(str);
+    // std::cout << str << std::endl;
 
 
     // 正则表达式测试
-    buff.clear();
-    patten.clear();
-    patten.write_string("<(.*)>(.*)</(\\1)>");
-    buff.write_string("123<xml>value</xml>456<widget>center</widget>hahaha<vertical>window</vertical>the end");
+    // buff.clear();
+    // patten.clear();
+    // patten.write_string("<(.*)>(.*)</(\\1)>");
+    // buff.write_string("123<xml>value</xml>456<widget>center</widget>hahaha<vertical>window</vertical>the end");
 
-    ret = buff.match(patten);
-    ASSERT_EQ(ret.size(), 3);
-    ASSERT_EQ(ret[0].str(), std::string("<xml>value</xml>"));
-    ASSERT_EQ(ret[1].str(), std::string("<widget>center</widget>"));
-    ASSERT_EQ(ret[2].str(), std::string("<vertical>window</vertical>"));
+    // ret = buff.match(patten);
+    // ASSERT_EQ(ret.size(), 3);
+    // ASSERT_EQ(ret[0].str(), std::string("<xml>value</xml>"));
+    // ASSERT_EQ(ret[1].str(), std::string("<widget>center</widget>"));
+    // ASSERT_EQ(ret[2].str(), std::string("<vertical>window</vertical>"));
 }
 
 }  // namespace

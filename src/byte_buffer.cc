@@ -169,21 +169,21 @@ bool ByteBuffer::empty(void) const
 }
 
 ByteBuffer_Iterator
-ByteBuffer::begin(void) const
+ByteBuffer::begin(void)
 {
     ByteBuffer_Iterator tmp(this);
     return tmp.begin();
 }
 
 ByteBuffer_Iterator
-ByteBuffer::end(void) const
+ByteBuffer::end(void)
 {
     ByteBuffer_Iterator tmp(this);
     return tmp.end();
 }
 
 ByteBuffer_Iterator 
-ByteBuffer::last_data(void) const
+ByteBuffer::last_data(void)
 {
     ByteBuffer_Iterator tmp(this);
     if (this->data_size() <= 0) {
@@ -191,6 +191,27 @@ ByteBuffer::last_data(void) const
     }
 
     return (tmp.begin() + (this->data_size() - 1));
+}
+
+ByteBuffer_Iterator 
+ByteBuffer::cbegin(void) const
+{
+    ByteBuffer_Iterator tmp(this);
+    return tmp.begin();
+}
+
+ByteBuffer_Iterator 
+ByteBuffer::cend(void) const
+{
+    ByteBuffer_Iterator tmp(this);
+    return tmp.end();
+}
+
+ByteBuffer_Iterator 
+ByteBuffer::clast_data(void) const
+{
+    ByteBuffer_Iterator tmp(this);
+    return tmp.end();
 }
 
 BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
@@ -433,70 +454,60 @@ ByteBuffer::get_data(ByteBuffer &out, ByteBuffer_Iterator &copy_start, BUFSIZE_T
 
 //////////////////////// 重载操作符 /////////////////////////
 
-ByteBuffer 
-operator+(ByteBuffer &lhs, ByteBuffer &rhs)
+ByteBuffer& 
+ByteBuffer::operator+(const ByteBuffer &rhs)
 {
-    // +10 为了提高冗余；
-    ByteBuffer out(lhs.data_size() + rhs.data_size());
-
-    for (auto iter = lhs.begin(); iter != lhs.end(); ++iter) {
-        out.write_int8(*iter);
-    }
-    for (auto iter = rhs.begin(); iter != rhs.end(); ++iter) {
-        out.write_int8(*iter);
+    for (auto iter = rhs.cbegin(); iter != rhs.cend(); ++iter) {
+        this->write_int8(*iter);
     }
 
-    return out;
+    return *this;
+}
+
+ByteBuffer& 
+ByteBuffer::operator+=(const ByteBuffer &rhs)
+{
+    for (auto iter = rhs.cbegin(); iter != rhs.cend(); ++iter) {
+        this->write_int8(*iter);
+    }
+
+    return *this;
 }
 
 bool 
-operator==(const ByteBuffer &lhs, const ByteBuffer &rhs)
+ByteBuffer::operator==(const ByteBuffer &rhs) const
 {
-    auto lhs_iter = lhs.begin();
-    auto rhs_iter = rhs.begin();
-
-    while (true) {
-        if (lhs_iter == lhs.end() && rhs_iter == rhs.end()) {
-            return true;
-        } else if (lhs_iter != lhs.end() && rhs_iter == rhs.end()) {
-            return false;
-        } if (lhs_iter == lhs.end() && rhs_iter != rhs.end()) {
-            return false;
-        }
-
-        if (*lhs_iter != *rhs_iter) {
-            return false;
-        }
-
-        lhs_iter++;
-        rhs_iter++;
-    }
-
-    return false;
-}
-
-bool 
-operator!=(const ByteBuffer &lhs, const ByteBuffer &rhs)
-{
-    if (lhs.data_size() == rhs.data_size()) {
+    if (this->data_size() != rhs.data_size()) {
         return false;
     }
-    auto lhs_iter = lhs.begin();
-    auto rhs_iter = rhs.begin();
+
+    auto lhs_iter = this->cbegin();
+    auto rhs_iter = rhs.cbegin();
 
     while (true) {
-        if (lhs_iter == lhs.end() && rhs_iter == rhs.end()) {
+        if (lhs_iter == this->cend() && rhs_iter == rhs.cend()) {
+            return true;
+        } else if (lhs_iter != this->cend() && rhs_iter == rhs.cend()) {
+            return false;
+        } else if (lhs_iter == this->cend() && rhs_iter != rhs.cend()) {
             return false;
         }
 
         if (*lhs_iter != *rhs_iter) {
-            return true;
+            return false;
         }
 
-        lhs_iter++;
-        rhs_iter++;
+        ++lhs_iter;
+        ++rhs_iter;
     }
+
     return false;
+}
+
+bool 
+ByteBuffer::operator!=(const ByteBuffer &rhs) const
+{
+    return !(*this == rhs);
 }
 
 ByteBuffer& 

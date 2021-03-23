@@ -58,14 +58,20 @@ public:
     BUFSIZE_T resize(BUFSIZE_T size);
     
     // 返回起始结束迭代器
-    ByteBuffer_Iterator begin(void) const;
-    ByteBuffer_Iterator end(void) const;
-    ByteBuffer_Iterator last_data(void) const;
+    ByteBuffer_Iterator begin(void);
+    ByteBuffer_Iterator end(void);
+    ByteBuffer_Iterator last_data(void);
+    
+    // 返回const 起始结束迭代器
+    ByteBuffer_Iterator cbegin(void) const;
+    ByteBuffer_Iterator cend(void) const;
+    ByteBuffer_Iterator clast_data(void) const;
 
     // 重载操作符
-    friend ByteBuffer operator+(ByteBuffer &lhs, ByteBuffer &rhs);
-    friend bool operator==(const ByteBuffer &lhs, const ByteBuffer &rhs);
-    friend bool operator!=(const ByteBuffer &lhs, const ByteBuffer &rhs);
+    ByteBuffer& operator+(const ByteBuffer &rhs);
+    ByteBuffer& operator+=(const ByteBuffer &rhs);
+    bool operator==(const ByteBuffer &rhs) const;
+    bool operator!=(const ByteBuffer &rhs) const;
     ByteBuffer& operator=(const ByteBuffer& src);
     BUFFER_TYPE& operator[](BUFSIZE_T index);
 
@@ -376,8 +382,8 @@ public:
 
         ostr << std::endl << "--------------debug_info-----------------------" << std::endl;
         ostr << "curr_pos: " << curr_pos_ << std::endl;
-        ostr << "begin_pos: " << buff_->begin().curr_pos_ << std::endl;
-        ostr << "end_pos: " << buff_->end().curr_pos_ << std::endl;
+        ostr << "begin_pos: " << buff_->cbegin().curr_pos_ << std::endl;
+        ostr << "end_pos: " << buff_->cend().curr_pos_ << std::endl;
         ostr << "buff_length: "  << buff_->data_size() << std::endl;
         ostr << "------------------------------------------------" << std::endl;
 
