@@ -457,8 +457,15 @@ ByteBuffer::get_data(ByteBuffer &out, ByteBuffer_Iterator &copy_start, BUFSIZE_T
 ByteBuffer& 
 ByteBuffer::operator+(const ByteBuffer &rhs)
 {
-    for (auto iter = rhs.cbegin(); iter != rhs.cend(); ++iter) {
-        this->write_int8(*iter);
+    BUFSIZE_T rhs_read_size = rhs.get_cont_read_size();
+    BUFFER_PTR rhs_read_ptr = rhs.get_read_buffer_ptr();
+
+    this->copy_data_to_buffer(rhs_read_ptr, rhs_read_size);
+    if (rhs_read_size < rhs.data_size()) {
+        rhs_read_size = rhs.get_cont_read_size();
+        rhs_read_ptr = rhs.get_read_buffer_ptr();
+
+        this->copy_data_to_buffer(rhs_read_ptr, rhs_read_size);
     }
 
     return *this;
@@ -467,8 +474,15 @@ ByteBuffer::operator+(const ByteBuffer &rhs)
 ByteBuffer& 
 ByteBuffer::operator+=(const ByteBuffer &rhs)
 {
-    for (auto iter = rhs.cbegin(); iter != rhs.cend(); ++iter) {
-        this->write_int8(*iter);
+    BUFSIZE_T rhs_read_size = rhs.get_cont_read_size();
+    BUFFER_PTR rhs_read_ptr = rhs.get_read_buffer_ptr();
+
+    this->copy_data_to_buffer(rhs_read_ptr, rhs_read_size);
+    if (rhs_read_size < rhs.data_size()) {
+        rhs_read_size = rhs.get_cont_read_size();
+        rhs_read_ptr = rhs.get_read_buffer_ptr();
+
+        this->copy_data_to_buffer(rhs_read_ptr, rhs_read_size);
     }
 
     return *this;
@@ -513,6 +527,9 @@ ByteBuffer::operator!=(const ByteBuffer &rhs) const
 ByteBuffer& 
 ByteBuffer::operator=(const ByteBuffer& src)
 {
+    if (src == *this) { // 当赋值对象是自己时，直接返回
+        return *this;
+    }
     this->clear();
 
     start_read_pos_ = src.start_read_pos_;
@@ -533,11 +550,8 @@ ByteBuffer::operator=(const ByteBuffer& src)
 BUFFER_TYPE& 
 ByteBuffer::operator[](BUFSIZE_T index)
 {
-    BUFFER_PTR read_ptr = this->get_read_buffer_ptr();
-
-    if (this->data_size() <= 0 || 
-        read_ptr == nullptr ||
-        index >= this->data_size()) {
+    BUFSIZE_T size = this->data_size();
+    if (size <= 0 || index >= size) {
         ostringstream ostr;
         ostr << "Line: " << __LINE__ << " out of range.";
         throw runtime_error(ostr.str());

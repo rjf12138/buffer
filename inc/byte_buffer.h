@@ -91,7 +91,7 @@ public:
     // 返回 ByteBuffer 中所有匹配 buff 的迭代器
     std::vector<ByteBuffer_Iterator> find(ByteBuffer &buff);
     
-    // 根据 buff 分割 ByteBuffer， buffs 分割 ByteBuffer
+    // 根据 buff 分割 ByteBuffer
     vector<ByteBuffer> split(ByteBuffer &buff);
 
     // 将 Bytebuffer 中 buf1 替换为 buf2
