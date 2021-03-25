@@ -697,6 +697,7 @@ ByteBuffer::split(ByteBuffer &buff)
 {
     std::vector<ByteBuffer> result;
     if (buff.data_size() <= 0 || this->data_size() <= 0) {
+        result.push_back(*this);
         return result;
     }
 
@@ -718,7 +719,7 @@ ByteBuffer::split(ByteBuffer &buff)
         result.push_back(tmp);
     }
 
-    copy_size = this->last_data() - start_copy_pos; // 保存剩余的字符
+    copy_size = (this->last_data() - start_copy_pos) + 1; // 保存剩余的字符
     if (copy_size > 0) {
         this->get_data(tmp, start_copy_pos, copy_size);
         if (tmp.data_size() > 0) {
@@ -733,9 +734,8 @@ ByteBuffer::split(ByteBuffer &buff)
 ByteBuffer 
 ByteBuffer::replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index)
 {
-    ByteBuffer tmp_buf;
-    if (buf1.data_size() <= 0 || buf2.data_size() <= 0 || this->data_size() <= 0) {
-        return tmp_buf;
+    if (buf1.data_size() <= 0 || this->data_size() <= 0) {
+        return *this;
     }
 
     BUFSIZE_T copy_size = 0;
@@ -757,7 +757,7 @@ ByteBuffer::replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index)
             }
         }
 
-        copy_size = this->last_data() - copy_pos_iter; // 保存剩余的字符
+        copy_size = this->last_data() - copy_pos_iter + 1; // 保存剩余的字符
         if (copy_size > 0) {
             this->get_data(tmp, copy_pos_iter, copy_size);
             result = result + tmp;
@@ -830,6 +830,8 @@ ByteBuffer::insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
     this->get_data(tmp_buf, insert_iter, copy_front_size);
     result = result + tmp_buf;
 
+    *this = result;
+
     return result;
 }
 
@@ -851,6 +853,8 @@ ByteBuffer::insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
     insert_iter++;
     this->get_data(tmp_buf, insert_iter, copy_front_size);
     result = result + tmp_buf;
+
+    *this = result;
 
     return result;
 }
