@@ -533,6 +533,14 @@ TEST_F(ByteBuffer_Test, iterator)
 
 TEST_F(ByteBuffer_Test, operate_buffer)
 {
+    // 测试 remove 
+    ByteBuffer data("abcabc");
+    data.remove(ByteBuffer("ca"));
+    ASSERT_EQ(data, ByteBuffer("abbc"));
+
+    data.remove(ByteBuffer(""));
+    ASSERT_EQ(data, ByteBuffer("abbc"));
+    //
     int max_str_len = 20;
     for (int i = 0; i < 10; ++i) {
         int patten_len = rand() % max_str_len;
@@ -547,6 +555,10 @@ TEST_F(ByteBuffer_Test, operate_buffer)
         for (int j = 0;j < src_len; ++j) {
             BUFFER_TYPE value = (rand() % ('z' - 'a')) + 'a';
             src.write_int8(value);
+        }
+
+        if (src.find(patten).size() > 0) { // 确保src中不存在符合patten的子串
+            src.remove(patten);
         }
 
         for (int gap = 1; gap < src.data_size(); ++gap) {
@@ -584,10 +596,13 @@ TEST_F(ByteBuffer_Test, operate_buffer)
             for (int j = 0; j < 10; ++j) { // 测试替换
                 int replace_len = rand() % max_str_len;
                 ByteBuffer replace_str;
-                cout << "j: " << j << endl;
                 for (int j = 0;j < replace_len; ++j) {
                     BUFFER_TYPE value = (rand() % ('z' - 'a')) + 'a';
                     replace_str.write_int8(value);
+                }
+                
+                if (src.find(replace_str).size() > 0) { // 确保src中不存在符合patten的子串
+                    src.remove(replace_str);
                 }
 
                 ByteBuffer rep1 = ret[0].replace(patten, replace_str);

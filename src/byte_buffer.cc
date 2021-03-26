@@ -61,7 +61,7 @@ ByteBuffer::ByteBuffer(const std::string &str)
     this->write_string(str);
 }
 
-ByteBuffer::ByteBuffer(BUFFER_PTR data, BUFSIZE_T size)
+ByteBuffer::ByteBuffer(const BUFFER_PTR data, BUFSIZE_T size)
 : buffer_(nullptr),
   start_read_pos_(0), 
   start_write_pos_(0), 
@@ -647,20 +647,24 @@ ByteBuffer::kmp_compute_prefix(std::vector<int> &out)
     BUFSIZE_T patten_size = this->data_size();
     out.resize(patten_size);
 
-    for (int i = 1; i < patten_size; i++)
+    int j = 0;
+    for (int i = 1; i < patten_size; ++i)
     {
-        int j = out[i - 1];
         while (j > 0 && (*this)[i] != (*this)[j]) {
-            j = out[j - 1];
+            j = out[j];
         }
-        out[i] = (*this)[i] == (*this)[j] ? j + 1 : 0;
+
+        if ((*this)[i] == (*this)[j]) {
+            ++j;
+        } 
+        out[i] = j;
     }
 
     return out.size();
 }
 
 std::vector<ByteBuffer_Iterator>
-ByteBuffer::find(ByteBuffer &pattern)
+ByteBuffer::find(ByteBuffer pattern)
 {
     std::vector<int> prefix;
     std::vector<ByteBuffer_Iterator> result;
@@ -672,7 +676,7 @@ ByteBuffer::find(ByteBuffer &pattern)
     }
 
     int p = 0;
-    for (BUFSIZE_T i = 0; i < size; i++)
+    for (BUFSIZE_T i = 0; i < size; ++i)
     {
         while (p > 0 && pattern[p] != (*this)[i]) {
             p = prefix[p];
@@ -693,7 +697,7 @@ ByteBuffer::find(ByteBuffer &pattern)
 }
 
 std::vector<ByteBuffer> 
-ByteBuffer::split(ByteBuffer &buff)
+ByteBuffer::split(ByteBuffer buff)
 {
     std::vector<ByteBuffer> result;
     if (buff.data_size() <= 0 || this->data_size() <= 0) {
@@ -732,7 +736,7 @@ ByteBuffer::split(ByteBuffer &buff)
 
 
 ByteBuffer 
-ByteBuffer::replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index)
+ByteBuffer::replace(ByteBuffer buf1, ByteBuffer buf2, BUFSIZE_T index)
 {
     if (buf1.data_size() <= 0 || this->data_size() <= 0) {
         return *this;
@@ -777,15 +781,14 @@ ByteBuffer::replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index)
 
 
 ByteBuffer 
-ByteBuffer::remove(ByteBuffer &buff, BUFSIZE_T index)
+ByteBuffer::remove(ByteBuffer buff, BUFSIZE_T index)
 {
-    ByteBuffer tmp_buf;
     if (buff.data_size() <= 0 || this->data_size() <= 0) {
-        return tmp_buf;
+        return *this;
     }
     
+    ByteBuffer tmp_buf;
     std::vector<ByteBuffer_Iterator> find_buff = this->find(buff);
-
     if (index < 0 || index >= (BUFSIZE_T)find_buff.size()) {
         index = -1;
     }
@@ -809,16 +812,18 @@ ByteBuffer::remove(ByteBuffer &buff, BUFSIZE_T index)
         tmp_buf = tmp_buf + out;
     }
 
+    *this = tmp_buf;
+
     return tmp_buf;
 }
 
 ByteBuffer 
-ByteBuffer::insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
+ByteBuffer::insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer buff)
 {
     ByteBuffer tmp_buf, result;
     if (!(insert_iter >= this->begin() && 
             insert_iter <= this->last_data())) {
-        return tmp_buf;
+        return *this;
     }
 
     ByteBuffer_Iterator begin_iter = this->begin();
@@ -836,12 +841,12 @@ ByteBuffer::insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
 }
 
 ByteBuffer 
-ByteBuffer::insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
+ByteBuffer::insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer buff)
 {
     ByteBuffer tmp_buf, result;
     if (!(insert_iter >= this->begin() && 
             insert_iter <= this->last_data())) {
-        return tmp_buf;
+        return *this;
     }
 
     ByteBuffer_Iterator begin_iter = this->begin();
@@ -861,7 +866,7 @@ ByteBuffer::insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff)
 
     // 返回符合模式 regex 的子串(使用正则表达式)
 vector<ByteBuffer> 
-ByteBuffer::match(ByteBuffer &regex_str)
+ByteBuffer::match(ByteBuffer regex_str)
 {
     vector<ByteBuffer> ret_match_str;
     std::regex reg(regex_str.str());

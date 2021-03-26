@@ -20,7 +20,7 @@ public:
     ByteBuffer(BUFSIZE_T size = 0);
     ByteBuffer(const ByteBuffer &buff);
     ByteBuffer(const std::string &str);
-    ByteBuffer(BUFFER_PTR data, BUFSIZE_T size);
+    ByteBuffer(const BUFFER_PTR data, BUFSIZE_T size);
     virtual ~ByteBuffer();
 
     BUFSIZE_T read_int8(int8_t &val);
@@ -89,24 +89,24 @@ public:
 
     // ===================== 操作ByteBuffer ======================
     // 返回 ByteBuffer 中所有匹配 buff 的迭代器
-    std::vector<ByteBuffer_Iterator> find(ByteBuffer &buff);
+    std::vector<ByteBuffer_Iterator> find(ByteBuffer buff);
     
     // 根据 buff 分割 ByteBuffer
-    vector<ByteBuffer> split(ByteBuffer &buff);
+    vector<ByteBuffer> split(ByteBuffer buff);
 
     // 将 Bytebuffer 中 buf1 替换为 buf2
-    ByteBuffer replace(ByteBuffer &buf1, ByteBuffer &buf2, BUFSIZE_T index = -1);
+    ByteBuffer replace(ByteBuffer buf1, ByteBuffer buf2, BUFSIZE_T index = -1);
 
     // 移除 ByteBuff 中匹配 buff 的子串
     // index 指定第几个匹配的子串， index 超出范围时，删除所有匹配子串, index 从0 开始计数
-    ByteBuffer remove(ByteBuffer &buff, BUFSIZE_T index = -1);
+    ByteBuffer remove(ByteBuffer buff, BUFSIZE_T index = -1);
 
     // 在 ByteBuff 指定迭代器前/后插入子串 buff
-    ByteBuffer insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff);
-    ByteBuffer insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer &buff);
+    ByteBuffer insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer buff);
+    ByteBuffer insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer buff);
 
     // 返回符合模式 regex 的子串(使用正则表达式)
-    vector<ByteBuffer> match(ByteBuffer &regex);
+    vector<ByteBuffer> match(ByteBuffer regex);
 
 //private:
 public:
