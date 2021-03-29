@@ -121,9 +121,7 @@ public:
     BUFSIZE_T copy_data_to_buffer(const void *data, BUFSIZE_T size);
     // 从bytebuff中拷贝data个字节到data中
     BUFSIZE_T copy_data_from_buffer(void *data, BUFSIZE_T size);
-
-    // 计算 KMP 字符处理函数的前缀
-    int kmp_compute_prefix(std::vector<int> &out);
+    
 private:
     BUFFER_PTR buffer_;
 

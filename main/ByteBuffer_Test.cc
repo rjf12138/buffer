@@ -620,7 +620,7 @@ TEST_F(ByteBuffer_Test, operate_buffer)
                 }
                 ASSERT_EQ(split1_len, src.data_size());
                 ASSERT_EQ(split2_len, src.data_size()); // 计算分割后总的字符串是否与源字符串等长
-                //problem - 数据内部原先有的字符串也被分割了
+                
                 auto iter = src.begin(); // 比较分割后的内容与原内容是否一致
                 for (std::size_t ib = 0; ib < split_1.size(); ++ib) {
                     for (BUFSIZE_T is = 0; is < split_1[ib].data_size(); ++is) {

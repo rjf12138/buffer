@@ -639,60 +639,34 @@ ByteBuffer::update_read_pos(BUFSIZE_T offset)
 }
 
 ///////////////////////////// 操作 ByteBuffer /////////////////////////////
-
-int 
-ByteBuffer::kmp_compute_prefix(std::vector<int> &out)
-{
-    out.clear();
-    BUFSIZE_T patten_size = this->data_size();
-    out.resize(patten_size);
-
-    int j = 0;
-    for (int i = 1; i < patten_size; ++i)
-    {
-        while (j > 0 && (*this)[i] != (*this)[j]) {
-            j = out[j];
-        }
-
-        if ((*this)[i] == (*this)[j]) {
-            ++j;
-        } 
-        out[i] = j;
-    }
-
-    return out.size();
-}
-
 std::vector<ByteBuffer_Iterator>
-ByteBuffer::find(ByteBuffer pattern)
+ByteBuffer::find(ByteBuffer patten)
 {
-    std::vector<int> prefix;
     std::vector<ByteBuffer_Iterator> result;
-    pattern.kmp_compute_prefix(prefix);
-
-    BUFSIZE_T size = this->data_size(), pattern_size = pattern.data_size();
-    if (pattern_size == 0) {
+    if (patten.data_size() == 0 || this->data_size() == 0) {
         return result;
     }
 
-    int p = 0;
-    for (BUFSIZE_T i = 0; i < size; ++i)
-    {
-        while (p > 0 && pattern[p] != (*this)[i]) {
-            p = prefix[p];
-        }
-
-        if ((*this)[i] == pattern[p]) {
-            p++;
-        }
-
-        if (p == pattern_size) {
-            ByteBuffer_Iterator tmp(this);
-            tmp += (i - p + 1);
-            result.push_back(tmp);
-            p = prefix[pattern_size - 1]; //防止出现prefix[pattern_size + 1]的情况出现，这里用prefix[pattern_size - 1]
+    int patten_index = 0;
+    for (int i = 0; i < this->data_size(); ++i) {
+        if (patten[patten_index] == (*this)[i]) {
+            for (int j = i; j < this->data_size();) {
+                if (patten_index < patten.data_size() && patten[patten_index] == (*this)[j]) {
+                    ++patten_index;
+                    ++j;
+                } else {
+                    break;
+                }
+            }
+            
+            if (patten_index == patten.data_size()) {
+                result.push_back(this->begin() + i);
+                i += patten.data_size();
+            }
+            patten_index = 0;
         }
     }
+
     return result;
 }
 
