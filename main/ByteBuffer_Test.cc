@@ -530,7 +530,8 @@ TEST_F(ByteBuffer_Test, iterator)
 
 }
 
-
+#define RANDOM_RANGE 256)
+//#define RANDOM_RANGE (('z' - 'a')) + 'a')
 TEST_F(ByteBuffer_Test, operate_buffer)
 {
     // 测试 remove 
@@ -541,27 +542,38 @@ TEST_F(ByteBuffer_Test, operate_buffer)
     data.remove(ByteBuffer(""));
     ASSERT_EQ(data, ByteBuffer("abbc"));
     //
-    int max_str_len = 20;
-    for (int i = 0; i < 10; ++i) {
+    int max_str_len = 50;
+    for (int i = 0; i < 1000; ++i) {
+        cout << "i: " <<i << endl;
         int patten_len = rand() % max_str_len;
         int src_len = rand() % max_str_len;
+        int replace_len = rand() % max_str_len;
 
-        ByteBuffer patten, src;
+        ByteBuffer patten, src, replace_str;
         for (int j = 0;j < patten_len; ++j) {
-            BUFFER_TYPE value = (rand() % ('z' - 'a')) + 'a';
+            BUFFER_TYPE value = (rand() % RANDOM_RANGE;
             patten.write_int8(value);
         }
 
         for (int j = 0;j < src_len; ++j) {
-            BUFFER_TYPE value = (rand() % ('z' - 'a')) + 'a';
+            BUFFER_TYPE value = (rand() % RANDOM_RANGE;
             src.write_int8(value);
+        }
+
+        for (int j = 0;j < replace_len; ++j) {
+            BUFFER_TYPE value = (rand() % RANDOM_RANGE;
+            replace_str.write_int8(value);
         }
 
         if (src.find(patten).size() > 0) { // 确保src中不存在符合patten的子串
             src.remove(patten);
         }
 
-        for (int gap = 1; gap < src.data_size(); ++gap) {
+        if (src.find(replace_str).size() > 0) { // 确保src中不存在符合replace_str的子串
+            src.remove(replace_str);
+        }
+
+        for (int gap = 1; gap < 10; ++gap) {
             vector<ByteBuffer> ret = random_str(src, patten, gap);
             vector<ByteBuffer> split_1 = ret[0].split(patten);
             vector<ByteBuffer> split_2 = ret[1].split(patten);
@@ -573,7 +585,7 @@ TEST_F(ByteBuffer_Test, operate_buffer)
             for (std::size_t is = 0; is < split_2.size(); ++is) {
                 split2_len += split_2[is].data_size();
             }
-            cout << "i: " << i << " gap: " << gap << endl;
+            //cout << "i: " << i << " gap: " << gap << endl;
             ASSERT_EQ(split1_len, src.data_size());
             ASSERT_EQ(split2_len, src.data_size()); // 计算分割后总的字符串是否与源字符串等长
 
@@ -593,48 +605,36 @@ TEST_F(ByteBuffer_Test, operate_buffer)
                 }
             }
 
-            for (int j = 0; j < 10; ++j) { // 测试替换
-                int replace_len = rand() % max_str_len;
-                ByteBuffer replace_str;
-                for (int j = 0;j < replace_len; ++j) {
-                    BUFFER_TYPE value = (rand() % ('z' - 'a')) + 'a';
-                    replace_str.write_int8(value);
-                }
-                
-                if (src.find(replace_str).size() > 0) { // 确保src中不存在符合patten的子串
-                    src.remove(replace_str);
-                }
+            // 测试替换
+            ByteBuffer rep1 = ret[0].replace(patten, replace_str);
+            ByteBuffer rep2 = ret[1].replace(patten, replace_str);
 
-                ByteBuffer rep1 = ret[0].replace(patten, replace_str);
-                ByteBuffer rep2 = ret[1].replace(patten, replace_str);
-
-                split_1 = rep1.split(replace_str);
-                split_2 = rep2.split(replace_str);
-                
-                BUFSIZE_T split1_len = 0, split2_len = 0;
-                for (std::size_t is = 0; is < split_1.size(); ++is) {
-                    split1_len += split_1[is].data_size();
+            split_1 = rep1.split(replace_str);
+            split_2 = rep2.split(replace_str);
+            
+            split1_len = 0, split2_len = 0;
+            for (std::size_t is = 0; is < split_1.size(); ++is) {
+                split1_len += split_1[is].data_size();
+            }
+            for (std::size_t is = 0; is < split_2.size(); ++is) {
+                split2_len += split_2[is].data_size();
+            }
+            ASSERT_EQ(split1_len, src.data_size());
+            ASSERT_EQ(split2_len, src.data_size()); // 计算分割后总的字符串是否与源字符串等长
+            
+            iter = src.begin(); // 比较分割后的内容与原内容是否一致
+            for (std::size_t ib = 0; ib < split_1.size(); ++ib) {
+                for (BUFSIZE_T is = 0; is < split_1[ib].data_size(); ++is) {
+                    ASSERT_EQ(split_1[ib][is], *iter);
+                    ++iter; 
                 }
-                for (std::size_t is = 0; is < split_2.size(); ++is) {
-                    split2_len += split_2[is].data_size();
-                }
-                ASSERT_EQ(split1_len, src.data_size());
-                ASSERT_EQ(split2_len, src.data_size()); // 计算分割后总的字符串是否与源字符串等长
-                
-                auto iter = src.begin(); // 比较分割后的内容与原内容是否一致
-                for (std::size_t ib = 0; ib < split_1.size(); ++ib) {
-                    for (BUFSIZE_T is = 0; is < split_1[ib].data_size(); ++is) {
-                        ASSERT_EQ(split_1[ib][is], *iter);
-                        ++iter; 
-                    }
-                }
-                
-                iter = src.begin();
-                for (std::size_t ib = 0; ib < split_2.size(); ++ib) {
-                    for (BUFSIZE_T is = 0; is < split_2[ib].data_size(); ++is) {
-                        ASSERT_EQ(split_2[ib][is], *iter);
-                        ++iter; 
-                    }
+            }
+            
+            iter = src.begin();
+            for (std::size_t ib = 0; ib < split_2.size(); ++ib) {
+                for (BUFSIZE_T is = 0; is < split_2[ib].data_size(); ++is) {
+                    ASSERT_EQ(split_2[ib][is], *iter);
+                    ++iter; 
                 }
             }
 
