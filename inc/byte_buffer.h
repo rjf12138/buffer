@@ -143,6 +143,20 @@ public:
     explicit ByteBuffer_Iterator(const ByteBuffer *buff)
             : buff_(buff), curr_pos_(buff->start_read_pos_){}
 
+    ByteBuffer_Iterator begin() 
+    {
+        ByteBuffer_Iterator tmp = *this;
+        tmp.curr_pos_ = buff_->start_read_pos_;
+        return tmp;
+    }
+
+    ByteBuffer_Iterator end()
+    {
+        ByteBuffer_Iterator tmp = *this;
+        tmp.curr_pos_ = buff_->start_write_pos_;
+        return tmp;
+    }
+
     int8_t operator*()
     {
         if (this->check_iterator() == false) {
@@ -415,19 +429,6 @@ private:
         return true;
     }
 
-    ByteBuffer_Iterator begin() 
-    {
-        ByteBuffer_Iterator tmp = *this;
-        tmp.curr_pos_ = buff_->start_read_pos_;
-        return tmp;
-    }
-
-    ByteBuffer_Iterator end()
-    {
-        ByteBuffer_Iterator tmp = *this;
-        tmp.curr_pos_ = buff_->start_write_pos_;
-        return tmp;
-    }
 private:
     const ByteBuffer *buff_ = nullptr;
     BUFSIZE_T curr_pos_;
