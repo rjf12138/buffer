@@ -75,6 +75,9 @@ public:
     ByteBuffer& operator=(const ByteBuffer& src);
     BUFFER_TYPE& operator[](BUFSIZE_T index);
 
+    // 判断 patten 是不是 bytebuffer 从 iter 开始的子串, size: -1 表示匹配全部, 否则指定具体大小
+    bool bytecmp(ByteBuffer_Iterator &iter, ByteBuffer &patten, BUFSIZE_T size = -1);
+
     // 向外面直接提供 buffer_ 指针，它们写是直接写入指针，避免不必要的拷贝
     BUFFER_PTR get_write_buffer_ptr(void) const;
     BUFFER_PTR get_read_buffer_ptr(void) const;

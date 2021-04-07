@@ -562,6 +562,29 @@ ByteBuffer::operator[](BUFSIZE_T index)
     return buffer_[index];
 }
 
+bool 
+ByteBuffer::bytecmp(ByteBuffer_Iterator &iter, ByteBuffer &patten, BUFSIZE_T size)
+{
+    if (iter.buff_->buffer_ != this->buffer_ || iter == this->end())
+    {
+        return false;
+    }
+
+    BUFSIZE_T max_size = (size == -1 ? patten.data_size() : size);
+    BUFSIZE_T index = 0;
+    for (auto tmp_iter = iter; tmp_iter != this->end() && index < max_size; ++tmp_iter, ++index) {
+        if (*tmp_iter != patten[index]) {
+            return false;
+        }
+    }
+
+    if (index == max_size) {
+        return true;
+    }
+
+    return false;
+}
+
 BUFFER_PTR 
 ByteBuffer::get_write_buffer_ptr(void) const
 {
