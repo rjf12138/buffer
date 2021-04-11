@@ -541,6 +541,12 @@ TEST_F(ByteBuffer_Test, operate_buffer)
 
     data.remove(ByteBuffer(""));
     ASSERT_EQ(data, ByteBuffer("abbc"));
+    // 测试 insert_front 和 insert_back
+    ByteBuffer src_buf("Hello, world!");
+    vector<string> ins_bufs = {"", "1", "12", "12345"};
+    vector<string> ins_front_bufs = {"1Hello, world!", "He1llo, world!", ""};
+
+
     //
     int max_str_len = 50;
     for (int i = 0; i < 1000; ++i) {
