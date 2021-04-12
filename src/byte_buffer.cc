@@ -814,13 +814,13 @@ ByteBuffer::remove(ByteBuffer buff, BUFSIZE_T index)
     return tmp_buf;
 }
 
-ByteBuffer 
+BUFSIZE_T 
 ByteBuffer::insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer buff)
 {
     ByteBuffer tmp_buf, result;
     if (!(insert_iter >= this->begin() && 
             insert_iter <= this->last_data())) {
-        return *this;
+        return -1;
     }
 
     ByteBuffer_Iterator begin_iter = this->begin();
@@ -834,16 +834,16 @@ ByteBuffer::insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer buff)
 
     *this = result;
 
-    return result;
+    return 0;
 }
 
-ByteBuffer 
+BUFSIZE_T 
 ByteBuffer::insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer buff)
 {
     ByteBuffer tmp_buf, result;
     if (!(insert_iter >= this->begin() && 
             insert_iter <= this->last_data())) {
-        return *this;
+        return -1;
     }
 
     ByteBuffer_Iterator begin_iter = this->begin();
@@ -858,7 +858,7 @@ ByteBuffer::insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer buff)
 
     *this = result;
 
-    return result;
+    return 0;
 }
 
     // 返回符合模式 regex 的子串(使用正则表达式)

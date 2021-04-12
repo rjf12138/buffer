@@ -105,8 +105,8 @@ public:
     ByteBuffer remove(ByteBuffer buff, BUFSIZE_T index = -1);
 
     // 在 ByteBuff 指定迭代器前/后插入子串 buff
-    ByteBuffer insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer buff);
-    ByteBuffer insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer buff);
+    BUFSIZE_T insert_front(ByteBuffer_Iterator &insert_iter, ByteBuffer buff);
+    BUFSIZE_T insert_back(ByteBuffer_Iterator &insert_iter, ByteBuffer buff);
 
     // 返回符合模式 regex 的子串(使用正则表达式)
     vector<ByteBuffer> match(ByteBuffer regex);

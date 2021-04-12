@@ -542,15 +542,31 @@ TEST_F(ByteBuffer_Test, operate_buffer)
     data.remove(ByteBuffer(""));
     ASSERT_EQ(data, ByteBuffer("abbc"));
     // 测试 insert_front 和 insert_back
-    ByteBuffer src_buf("Hello, world!");
+    ByteBuffer src_buf("Hello");
     vector<string> ins_bufs = {"", "1", "12", "12345"};
-    vector<string> ins_front_bufs = {"1Hello, world!", "He1llo, world!", ""};
+    
+    auto beg_iter = src_buf.begin();
+    src_buf.insert_front(beg_iter, ByteBuffer("12"));
+    ASSERT_EQ(src_buf, ByteBuffer("12Hello"));
+    
+    beg_iter = src_buf.begin();
+    src_buf.insert_back(beg_iter, ByteBuffer("12"));
+    ASSERT_EQ(src_buf, ByteBuffer("1122Hello"));
 
+    src_buf.clear();
+    src_buf.write_string("Hello");
+    beg_iter = src_buf.begin() + 2;
+    src_buf.insert_front(beg_iter, ByteBuffer("12"));
+    ASSERT_EQ(src_buf, ByteBuffer("He12llo"));
 
-    //
+    beg_iter = src_buf.begin() + 2;
+    src_buf.insert_back(beg_iter, ByteBuffer("12"));
+    ASSERT_EQ(src_buf, ByteBuffer("He1122llo"));
+
+    return ;
+    // 测试分割和替换
     int max_str_len = 50;
     for (int i = 0; i < 1000; ++i) {
-        cout << "i: " <<i << endl;
         int patten_len = rand() % max_str_len;
         int src_len = rand() % max_str_len;
         int replace_len = rand() % max_str_len;
