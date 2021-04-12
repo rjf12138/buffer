@@ -211,11 +211,11 @@ public:
         }
 
         if (buff_->start_write_pos_ < buff_->start_read_pos_) {
-            if (curr_pos_ > buff_->start_read_pos_ && rhs.curr_pos_ > buff_->start_read_pos_) {
+            if (curr_pos_ >= buff_->start_read_pos_ && rhs.curr_pos_ >= buff_->start_read_pos_) {
                 return curr_pos_ - rhs.curr_pos_;
             } else if (curr_pos_ > buff_->start_read_pos_ && rhs.curr_pos_ < buff_->start_read_pos_) {
                 return (curr_pos_ - buff_->max_buffer_size_ + 1) - rhs.curr_pos_;
-            } else if (curr_pos_ < buff_->start_read_pos_ && rhs.curr_pos_ > buff_->start_read_pos_) {
+            } else if (curr_pos_ <= buff_->start_read_pos_ && rhs.curr_pos_ >= buff_->start_read_pos_) {
                 return -1 * (rhs.curr_pos_ - buff_->max_buffer_size_ + 1 - curr_pos_);
             } else if (curr_pos_ < buff_->start_write_pos_ && rhs.curr_pos_ < buff_->start_write_pos_) {
                 return curr_pos_ - rhs.curr_pos_;

@@ -228,7 +228,7 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
     }
 
     if (this->idle_size() < size) {
-        fprintf(stderr, "ByteBuffer remain idle space(%ld) is less than size(%ld)!", this->idle_size(), size);
+        fprintf(stderr, "ByteBuffer remain idle space(%ld) is less than size(%ld)!\n", this->idle_size(), size);
         return 0;
     }
 
@@ -260,7 +260,7 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
     }
    
     if (this->data_size() < size) {
-        fprintf(stderr, "ByteBuffer remain data(%ld) is less than size(%ld)!", this->data_size(), size);
+        fprintf(stderr, "ByteBuffer remain data(%ld) is less than size(%ld)!\n", this->data_size(), size);
         return 0;
     }
 
