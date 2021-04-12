@@ -562,8 +562,7 @@ TEST_F(ByteBuffer_Test, operate_buffer)
     beg_iter = src_buf.begin() + 2;
     src_buf.insert_back(beg_iter, ByteBuffer("12"));
     ASSERT_EQ(src_buf, ByteBuffer("He1122llo"));
-
-    return ;
+    
     // 测试分割和替换
     int max_str_len = 50;
     for (int i = 0; i < 1000; ++i) {
