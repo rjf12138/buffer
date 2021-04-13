@@ -10,7 +10,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/ruanjian/workspace/project_pre/buffer/output/debug/bin/ByteBuffer_Test",
-            "args": ["--gtest_filter=ByteBuffer_Test.operate_buffer"],
+            "args": ["--gtest_filter=ByteBuffer_Test.iterator"],
             "stopAtEntry": false,
             "cwd": "/home/ruanjian/workspace/project_pre/buffer",
             "environment": [],

@@ -141,297 +141,46 @@ class ByteBuffer_Iterator : public iterator<random_access_iterator_tag, int8_t>
 {
     friend class ByteBuffer;
 public:
-    ByteBuffer_Iterator(void)
-        : buff_(nullptr), curr_pos_(0) {}
-    explicit ByteBuffer_Iterator(const ByteBuffer *buff)
-            : buff_(buff), curr_pos_(buff->start_read_pos_){}
+    ByteBuffer_Iterator(void);
+    explicit ByteBuffer_Iterator(const ByteBuffer *buff);
 
-    ByteBuffer_Iterator begin() 
-    {
-        ByteBuffer_Iterator tmp = *this;
-        tmp.curr_pos_ = buff_->start_read_pos_;
-        return tmp;
-    }
+    ByteBuffer_Iterator begin() ;
+    ByteBuffer_Iterator end();
 
-    ByteBuffer_Iterator end()
-    {
-        ByteBuffer_Iterator tmp = *this;
-        tmp.curr_pos_ = buff_->start_write_pos_;
-        return tmp;
-    }
-
-    int8_t operator*()
-    {
-        if (this->check_iterator() == false) {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator* out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-        return buff_->buffer_[curr_pos_];
-    }
-
-    ByteBuffer_Iterator operator+(BUFSIZE_T inc)
-    {
-        if (this->check_iterator() == false) {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator+ out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-
-        ByteBuffer_Iterator tmp_iter = *this;
-        tmp_iter.curr_pos_ = (tmp_iter.curr_pos_ + buff_->max_buffer_size_ + inc)  % buff_->max_buffer_size_;
-
-        return tmp_iter;
-    }
-
-    ByteBuffer_Iterator operator-(int des) {
-        if (this->check_iterator() == false) {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator- out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-
-        ByteBuffer_Iterator tmp_iter = *this;
-        tmp_iter.curr_pos_ = (tmp_iter.curr_pos_ + buff_->max_buffer_size_ - des)  % buff_->max_buffer_size_;
-
-        return tmp_iter;
-    }
-
-    BUFSIZE_T operator-(ByteBuffer_Iterator &rhs)
-    {
-        if (this->check_iterator() == false || rhs.check_iterator() == false) {
-            return 0;
-        }
-
-        if (this->buff_->buffer_ != rhs.buff_->buffer_) {
-            return 0;
-        }
-
-        if (buff_->start_write_pos_ < buff_->start_read_pos_) {
-            if (curr_pos_ >= buff_->start_read_pos_ && rhs.curr_pos_ >= buff_->start_read_pos_) {
-                return curr_pos_ - rhs.curr_pos_;
-            } else if (curr_pos_ > buff_->start_read_pos_ && rhs.curr_pos_ < buff_->start_read_pos_) {
-                return (curr_pos_ - buff_->max_buffer_size_ + 1) - rhs.curr_pos_;
-            } else if (curr_pos_ <= buff_->start_read_pos_ && rhs.curr_pos_ >= buff_->start_read_pos_) {
-                return -1 * (rhs.curr_pos_ - buff_->max_buffer_size_ + 1 - curr_pos_);
-            } else if (curr_pos_ < buff_->start_write_pos_ && rhs.curr_pos_ < buff_->start_write_pos_) {
-                return curr_pos_ - rhs.curr_pos_;
-            }
-        } else {
-            return curr_pos_ - rhs.curr_pos_;
-        }
-
-        return 0;
-    }
+    int8_t operator*();
+    ByteBuffer_Iterator operator+(BUFSIZE_T inc);
+    ByteBuffer_Iterator operator-(int des);
+    BUFSIZE_T operator-(ByteBuffer_Iterator &rhs);
 
     // 前置++
-    ByteBuffer_Iterator& operator++()
-    {
-        if (this->check_iterator() == false)
-        {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator++ out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-
-        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ + 1) % buff_->max_buffer_size_;
-
-        return *this;
-    }
+    ByteBuffer_Iterator& operator++();
 
     // 后置++
-    ByteBuffer_Iterator operator++(int)
-    {
-        if (this->check_iterator() == false)
-        {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator++(int) out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-
-        ByteBuffer_Iterator tmp = *this;
-        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ + 1) % buff_->max_buffer_size_;
-
-        return tmp;
-    }
+    ByteBuffer_Iterator operator++(int);
 
     // 前置--
-    ByteBuffer_Iterator& operator--()
-    {
-        if (this->check_iterator() == false) {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator-- out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ - 1) % buff_->max_buffer_size_;
-
-        return *this;
-    }
+    ByteBuffer_Iterator& operator--();
 
     // 后置--
-    ByteBuffer_Iterator operator--(int)
-    {
-        if (this->check_iterator() == false) {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator--(int) out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-
-        ByteBuffer_Iterator tmp = *this;
-        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ - 1) % buff_->max_buffer_size_;
-
-        return tmp;
-    }
+    ByteBuffer_Iterator operator--(int);
 
     // +=
-    ByteBuffer_Iterator& operator+=(BUFSIZE_T inc)
-    {
-        if (this->check_iterator() == false) {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator+= out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-
-        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ + inc)  % buff_->max_buffer_size_;
-
-        return *this;
-    }
-
-    ByteBuffer_Iterator& operator-=(BUFSIZE_T des)
-    {
-        if (this->check_iterator() == false) {
-            ostringstream ostr;
-            ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator-= out of range.";
-            ostr << "debug_info: " << this->debug_info() << std::endl;
-            throw runtime_error(ostr.str());
-        }
-
-        curr_pos_ = (curr_pos_ + buff_->max_buffer_size_ - des)  % buff_->max_buffer_size_;
-
-        return *this;
-    }
+    ByteBuffer_Iterator& operator+=(BUFSIZE_T inc);
+    ByteBuffer_Iterator& operator-=(BUFSIZE_T des);
 
     // 只支持 == ,!= , = 其他的比较都不支持
-    bool operator==(const ByteBuffer_Iterator& iter) const {
-        return (curr_pos_ == iter.curr_pos_ && buff_ == iter.buff_);
-    }
-    bool operator!=(const ByteBuffer_Iterator& iter) const {
-        return (curr_pos_ != iter.curr_pos_ || buff_ != iter.buff_);
-    }
-    bool operator>(const ByteBuffer_Iterator& iter) const {
-        if (buff_ != iter.buff_) {
-            return false;
-        }
-        if (curr_pos_ > iter.curr_pos_) {
-            return true;
-        } else if (curr_pos_ < iter.curr_pos_) {
-            if (curr_pos_ < buff_->start_read_pos_) {
-                return true;
-            }
-        }
+    bool operator==(const ByteBuffer_Iterator& iter) const;
+    bool operator!=(const ByteBuffer_Iterator& iter) const;
+    bool operator>(const ByteBuffer_Iterator& iter) const;
+    bool operator>=(const ByteBuffer_Iterator& iter) const;
+    bool operator<(const ByteBuffer_Iterator& iter) const;
+    bool operator<=(const ByteBuffer_Iterator& iter) const;
+    ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src);
 
-        return false;
-    }
-    bool operator>=(const ByteBuffer_Iterator& iter) const {
-        if (buff_ != iter.buff_) {
-            return false;
-        }
-        if (curr_pos_ >= iter.curr_pos_) {
-            return true;
-        } else if (curr_pos_ < iter.curr_pos_) {
-            if (curr_pos_ < buff_->start_read_pos_) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-    bool operator<(const ByteBuffer_Iterator& iter) const {
-        if (buff_ != iter.buff_) {
-            return false;
-        }
-        if (curr_pos_ >= iter.curr_pos_) {
-            return false;
-        } else if (curr_pos_ < iter.curr_pos_) {
-            if (curr_pos_ < buff_->start_read_pos_) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-    bool operator<=(const ByteBuffer_Iterator& iter) const {
-        if (buff_ != iter.buff_) {
-            return false;
-        }
-        if (curr_pos_ > iter.curr_pos_) {
-            return false;
-        } else if (curr_pos_ < iter.curr_pos_) {
-            if (curr_pos_ < buff_->start_read_pos_) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-    ByteBuffer_Iterator& operator=(const ByteBuffer_Iterator& src)
-    {
-        if (src != *this) {
-            buff_ = src.buff_;
-            curr_pos_ = src.curr_pos_;
-        }
-
-        return *this;
-    }
-
-    string debug_info(void) {
-        ostringstream ostr;
-
-        ostr << std::endl << "--------------debug_info-----------------------" << std::endl;
-        ostr << "curr_pos: " << curr_pos_ << std::endl;
-        ostr << "begin_pos: " << buff_->cbegin().curr_pos_ << std::endl;
-        ostr << "end_pos: " << buff_->cend().curr_pos_ << std::endl;
-        ostr << "buff_length: "  << buff_->data_size() << std::endl;
-        ostr << "------------------------------------------------" << std::endl;
-
-        return ostr.str();
-    }
+    string debug_info(void);
 private:
-    bool check_iterator(void) {
-        if (buff_ == nullptr || buff_->buffer_ == nullptr) {
-            curr_pos_ = 0;
-            return false;
-        }
-
-        if (buff_->start_write_pos_ >= buff_->start_read_pos_) {
-            if (curr_pos_ < buff_->start_read_pos_ || curr_pos_ >= buff_->start_write_pos_) {
-                curr_pos_ = buff_->start_write_pos_;
-                return false;
-            }
-        }
-
-        if (buff_->start_write_pos_ < buff_->start_read_pos_) {
-            if (curr_pos_ < buff_->start_read_pos_ && curr_pos_ >= buff_->start_write_pos_) {
-                curr_pos_ = buff_->start_write_pos_;
-                return false;
-            }
-        }
-
-        if (this->curr_pos_ == buff_->start_write_pos_) { // 检查当前位置是不是指向了 end()
-            return false;
-        }
-
-        return true;
-    }
-
+    bool check_iterator(void);
+    bool move_postion(BUFSIZE_T distance, BUFSIZE_T &new_postion);
 private:
     const ByteBuffer *buff_ = nullptr;
     BUFSIZE_T curr_pos_;

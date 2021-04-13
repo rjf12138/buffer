@@ -881,4 +881,300 @@ ByteBuffer::match(ByteBuffer regex_str)
     return ret_match_str;
 }
 
+///////////////////////////////////// ByteBuffer_itertor ////////////////////////////////////////////////////
+ByteBuffer_Iterator::ByteBuffer_Iterator(void)
+    : buff_(nullptr), curr_pos_(0) {}
+
+ByteBuffer_Iterator::ByteBuffer_Iterator(const ByteBuffer *buff)
+        : buff_(buff), curr_pos_(buff->start_read_pos_){}
+
+ByteBuffer_Iterator 
+ByteBuffer_Iterator::begin() 
+{
+    ByteBuffer_Iterator tmp = *this;
+    tmp.curr_pos_ = buff_->start_read_pos_;
+    return tmp;
+}
+
+ByteBuffer_Iterator 
+ByteBuffer_Iterator::end()
+{
+    ByteBuffer_Iterator tmp = *this;
+    tmp.curr_pos_ = buff_->start_write_pos_;
+    return tmp;
+}
+
+int8_t 
+ByteBuffer_Iterator::operator*()
+{
+    if (this->check_iterator() == false) {
+        ostringstream ostr;
+        ostr << "Line: " << __LINE__ << " ByteBuffer_Iterator operator* out of range.";
+        ostr << "debug_info: " << this->debug_info() << std::endl;
+        throw runtime_error(ostr.str());
+    }
+    return buff_->buffer_[curr_pos_];
+}
+
+ByteBuffer_Iterator 
+ByteBuffer_Iterator::operator+(BUFSIZE_T inc)
+{
+    ByteBuffer_Iterator tmp_iter = *this;
+    this->move_postion(inc, tmp_iter.curr_pos_);
+
+    return tmp_iter;
+}
+
+ByteBuffer_Iterator 
+ByteBuffer_Iterator::operator-(int des) 
+{
+    ByteBuffer_Iterator tmp_iter = *this;
+    this->move_postion(des, tmp_iter.curr_pos_);
+
+    return tmp_iter;
+}
+
+BUFSIZE_T 
+ByteBuffer_Iterator::operator-(ByteBuffer_Iterator &rhs)
+{
+    if (this->buff_->buffer_ != rhs.buff_->buffer_) {
+        return 0;
+    }
+
+    BUFSIZE_T max_size = buff_->max_buffer_size_;
+
+    BUFSIZE_T start = this->buff_->start_read_pos_;
+    BUFSIZE_T tail = this->buff_->start_write_pos_;
+
+    BUFSIZE_T right_postion = (rhs.curr_pos_ < this->curr_pos_ ? this->curr_pos_ : rhs.curr_pos_);
+    BUFSIZE_T left_postion = (right_postion == rhs.curr_pos_ ? this->curr_pos_ : rhs.curr_pos_);
+
+    BUFSIZE_T diff = left_postion - right_postion;
+
+    if (start >= tail) {
+        return max_size - diff + 1;
+    }
+    
+    return diff;
+}
+
+// 前置++
+ByteBuffer_Iterator& 
+ByteBuffer_Iterator::operator++()
+{
+    this->move_postion(1, this->curr_pos_);
+
+    return *this;
+}
+
+// 后置++
+ByteBuffer_Iterator 
+ByteBuffer_Iterator::operator++(int)
+{
+    ByteBuffer_Iterator tmp_iter = *this;
+    this->move_postion(1, tmp_iter.curr_pos_);
+
+    return tmp_iter;
+}
+
+// 前置--
+ByteBuffer_Iterator& 
+ByteBuffer_Iterator::operator--()
+{
+    this->move_postion(-1, this->curr_pos_);
+
+    return *this;
+}
+
+// 后置--
+ByteBuffer_Iterator 
+ByteBuffer_Iterator::operator--(int)
+{
+    ByteBuffer_Iterator tmp_iter = *this;
+    this->move_postion(-1, tmp_iter.curr_pos_);
+
+    return tmp_iter;
+}
+
+// +=
+ByteBuffer_Iterator& 
+ByteBuffer_Iterator::operator+=(BUFSIZE_T inc)
+{
+    this->move_postion(inc, this->curr_pos_);
+
+    return *this;
+}
+
+ByteBuffer_Iterator& 
+ByteBuffer_Iterator::operator-=(BUFSIZE_T des)
+{
+    this->move_postion(des, this->curr_pos_);
+
+    return *this;
+}
+
+// 只支持 == ,!= , = 其他的比较都不支持
+bool 
+ByteBuffer_Iterator::operator==(const ByteBuffer_Iterator& iter) const 
+{
+    return (curr_pos_ == iter.curr_pos_ && buff_ == iter.buff_);
+}
+
+bool 
+ByteBuffer_Iterator::operator!=(const ByteBuffer_Iterator& iter) const 
+{
+    return (curr_pos_ != iter.curr_pos_ || buff_ != iter.buff_);
+}
+
+bool 
+ByteBuffer_Iterator::operator>(const ByteBuffer_Iterator& iter) const 
+{
+    if (buff_ != iter.buff_) {
+        return false;
+    }
+    if (curr_pos_ > iter.curr_pos_) {
+        return true;
+    } else if (curr_pos_ < iter.curr_pos_) {
+        if (curr_pos_ < buff_->start_read_pos_) {
+            return true;
+        }
+    }
+
+    return false;
+}
+bool 
+ByteBuffer_Iterator::operator>=(const ByteBuffer_Iterator& iter) const 
+{
+    if (buff_ != iter.buff_) {
+        return false;
+    }
+    if (curr_pos_ >= iter.curr_pos_) {
+        return true;
+    } else if (curr_pos_ < iter.curr_pos_) {
+        if (curr_pos_ < buff_->start_read_pos_) {
+            return true;
+        }
+    }
+
+    return false;
+}
+bool 
+ByteBuffer_Iterator::operator<(const ByteBuffer_Iterator& iter) const 
+{
+    if (buff_ != iter.buff_) {
+        return false;
+    }
+    if (curr_pos_ >= iter.curr_pos_) {
+        return false;
+    } else if (curr_pos_ < iter.curr_pos_) {
+        if (curr_pos_ < buff_->start_read_pos_) {
+            return false;
+        }
+    }
+
+    return true;
+}
+bool 
+ByteBuffer_Iterator::operator<=(const ByteBuffer_Iterator& iter) const 
+{
+    if (buff_ != iter.buff_) {
+        return false;
+    }
+    if (curr_pos_ > iter.curr_pos_) {
+        return false;
+    } else if (curr_pos_ < iter.curr_pos_) {
+        if (curr_pos_ < buff_->start_read_pos_) {
+            return false;
+        }
+    }
+
+    return true;
+}
+ByteBuffer_Iterator& 
+ByteBuffer_Iterator::operator=(const ByteBuffer_Iterator& src)
+{
+    if (src != *this) {
+        buff_ = src.buff_;
+        curr_pos_ = src.curr_pos_;
+    }
+
+    return *this;
+}
+
+string 
+ByteBuffer_Iterator::debug_info(void) 
+{
+    ostringstream ostr;
+
+    ostr << std::endl << "--------------debug_info-----------------------" << std::endl;
+    ostr << "curr_pos: " << curr_pos_ << std::endl;
+    ostr << "begin_pos: " << buff_->cbegin().curr_pos_ << std::endl;
+    ostr << "end_pos: " << buff_->cend().curr_pos_ << std::endl;
+    ostr << "buff_length: "  << buff_->data_size() << std::endl;
+    ostr << "------------------------------------------------" << std::endl;
+
+    return ostr.str();
+}
+
+bool 
+ByteBuffer_Iterator::check_iterator(void) 
+{
+    if (buff_ == nullptr || buff_->buffer_ == nullptr) {
+        curr_pos_ = 0;
+        return false;
+    }
+
+    if (buff_->start_write_pos_ >= buff_->start_read_pos_) {
+        if (curr_pos_ < buff_->start_read_pos_ || curr_pos_ >= buff_->start_write_pos_) {
+            curr_pos_ = buff_->start_write_pos_;
+            return false;
+        }
+    }
+
+    if (buff_->start_write_pos_ < buff_->start_read_pos_) {
+        if (curr_pos_ < buff_->start_read_pos_ && curr_pos_ >= buff_->start_write_pos_) {
+            curr_pos_ = buff_->start_write_pos_;
+            return false;
+        }
+    }
+
+    if (this->curr_pos_ == buff_->start_write_pos_) { // 检查当前位置是不是指向了 end()
+        return false;
+    }
+
+    return true;
+}
+
+bool 
+ByteBuffer_Iterator::move_postion(BUFSIZE_T distance, BUFSIZE_T &new_postion)
+{
+    if (this->check_iterator() == false) {
+        new_postion = this->buff_->start_write_pos_;
+        return false;
+    }
+
+    new_postion = this->curr_pos_ + distance;
+    BUFSIZE_T start = this->buff_->start_read_pos_;
+    BUFSIZE_T tail = this->buff_->start_write_pos_;
+    BUFSIZE_T max_size = buff_->max_buffer_size_;
+
+    if (start < tail) {
+        if (start <= new_postion && new_postion < tail) {
+            return true;
+        }
+    } else if (start > tail) {
+        if (start <= new_postion && new_postion <= max_size) {
+            return true;
+        }
+
+        BUFSIZE_T diff = new_postion - max_size - 1; // 减一是为了从零开始
+        if (0 <= diff && diff < tail) {
+            return true;
+        }
+    }
+
+    new_postion = this->buff_->start_write_pos_;
+    return false;
+}
+
 }
