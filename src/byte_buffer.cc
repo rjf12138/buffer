@@ -929,7 +929,7 @@ ByteBuffer_Iterator
 ByteBuffer_Iterator::operator-(int des) 
 {
     ByteBuffer_Iterator tmp_iter = *this;
-    this->move_postion(des, tmp_iter.curr_pos_);
+    this->move_postion(-1 * des, tmp_iter.curr_pos_);
 
     return tmp_iter;
 }
@@ -949,7 +949,7 @@ ByteBuffer_Iterator::operator-(ByteBuffer_Iterator &rhs)
     BUFSIZE_T right_postion = (rhs.curr_pos_ < this->curr_pos_ ? this->curr_pos_ : rhs.curr_pos_);
     BUFSIZE_T left_postion = (right_postion == rhs.curr_pos_ ? this->curr_pos_ : rhs.curr_pos_);
 
-    BUFSIZE_T diff = left_postion - right_postion;
+    BUFSIZE_T diff = right_postion - left_postion;
 
     if (start >= tail) {
         return max_size - diff + 1;
@@ -972,7 +972,7 @@ ByteBuffer_Iterator
 ByteBuffer_Iterator::operator++(int)
 {
     ByteBuffer_Iterator tmp_iter = *this;
-    this->move_postion(1, tmp_iter.curr_pos_);
+    this->move_postion(1, this->curr_pos_);
 
     return tmp_iter;
 }
@@ -991,7 +991,7 @@ ByteBuffer_Iterator
 ByteBuffer_Iterator::operator--(int)
 {
     ByteBuffer_Iterator tmp_iter = *this;
-    this->move_postion(-1, tmp_iter.curr_pos_);
+    this->move_postion(-1, this->curr_pos_);
 
     return tmp_iter;
 }
@@ -1008,7 +1008,7 @@ ByteBuffer_Iterator::operator+=(BUFSIZE_T inc)
 ByteBuffer_Iterator& 
 ByteBuffer_Iterator::operator-=(BUFSIZE_T des)
 {
-    this->move_postion(des, this->curr_pos_);
+    this->move_postion(-1 * des, this->curr_pos_);
 
     return *this;
 }
@@ -1137,22 +1137,13 @@ ByteBuffer_Iterator::check_iterator(void)
             return false;
         }
     }
-
-    if (this->curr_pos_ == buff_->start_write_pos_) { // 检查当前位置是不是指向了 end()
-        return false;
-    }
-
+    
     return true;
 }
 
 bool 
 ByteBuffer_Iterator::move_postion(BUFSIZE_T distance, BUFSIZE_T &new_postion)
 {
-    if (this->check_iterator() == false) {
-        new_postion = this->buff_->start_write_pos_;
-        return false;
-    }
-
     new_postion = this->curr_pos_ + distance;
     BUFSIZE_T start = this->buff_->start_read_pos_;
     BUFSIZE_T tail = this->buff_->start_write_pos_;
@@ -1163,13 +1154,22 @@ ByteBuffer_Iterator::move_postion(BUFSIZE_T distance, BUFSIZE_T &new_postion)
             return true;
         }
     } else if (start > tail) {
-        if (start <= new_postion && new_postion <= max_size) {
+        if (start <= new_postion && new_postion < max_size) {
+            return true;
+        } else if (0 <= new_postion && new_postion < tail) {
             return true;
         }
 
-        BUFSIZE_T diff = new_postion - max_size - 1; // 减一是为了从零开始
-        if (0 <= diff && diff < tail) {
-            return true;
+        if (new_postion >= max_size) {
+            new_postion = new_postion - max_size;
+            if (0 <= new_postion && new_postion < tail) {
+                return true;
+            }
+        } else if (new_postion < 0) {
+            new_postion = new_postion + max_size;
+            if (start <= new_postion && new_postion <= max_size) {
+                return true;
+            }
         }
     }
 

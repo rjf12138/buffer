@@ -484,10 +484,50 @@ TEST_F(ByteBuffer_Test, iterator)
         buff.read_string(read_str);
     }
 
+    // 测试加/减法
+    buff.clear();
+    ByteBuffer_Iterator iter1, iter2;
+
+    for (int i = 0; i < 3600; ++i) {
+        buff.write_string(str);
+        iter1 = buff.begin();
+        iter2 = buff.end();
+        for (int i = buff.data_size(); i > 0; --i) {
+            auto tmp_iter1 = iter2 - i;
+            auto tmp_iter2 = iter1 + (buff.data_size() - i);
+            ASSERT_EQ(*tmp_iter1, *tmp_iter2);
+            ASSERT_EQ(str[buff.data_size() - i], *tmp_iter1);
+        }
+        buff.read_string(read_str);
+    }
+
+    // 测试两个位置距离
+    buff.clear();
+
+    for (int i = 0; i < 3600; ++i) {
+        cout << "i： " << i << endl; 
+        buff.write_string(str);
+        iter1 = buff.begin();
+        iter2 = buff.end();
+        for (int i = buff.data_size(); i > 0; --i) {
+            BUFSIZE_T dis = iter2 - iter1;
+            ++iter1;
+            ASSERT_EQ(dis, i);
+        }
+
+        iter1 = buff.begin();
+        iter2 = buff.end();
+        for (int i = buff.data_size(); i > 0; --i) {
+            BUFSIZE_T dis = iter2 - iter1;
+            --iter2;
+            ASSERT_EQ(dis, i);
+        }
+        buff.read_string(read_str);
+    }
+
     // 测试判等
     bool throw_error = false;
     ByteBuffer buff1, buff2;
-    ByteBuffer_Iterator iter1, iter2;
 
     iter1 = buff1.begin();
     iter2 = buff2.begin();
@@ -508,26 +548,29 @@ TEST_F(ByteBuffer_Test, iterator)
 
     // 测试前置，后置加减
     ByteBuffer buff_plus;
-    buff_plus.write_string("helxo world");
+    for (int i = 0; i < 36000; ++i) {
+        buff_plus.write_string("helxo world");
 
-    iter = buff_plus.begin();
-    ASSERT_EQ(*iter, 'h');
-    iter++;
-    ASSERT_EQ(*iter, 'e');
-    ByteBuffer_Iterator iter_back_plus = iter++;
-    ASSERT_EQ(*iter_back_plus, 'e');
-    ASSERT_EQ(*iter, 'l');
-    ByteBuffer_Iterator iter_front_plus = ++iter;
-    ASSERT_EQ(*iter, 'x');
-    ASSERT_EQ(*iter_front_plus, 'x');
+        iter = buff_plus.begin();
+        ASSERT_EQ(*iter, 'h');
+        iter++;
+        ASSERT_EQ(*iter, 'e');
+        ByteBuffer_Iterator iter_back_plus = iter++;
+        ASSERT_EQ(*iter_back_plus, 'e');
+        ASSERT_EQ(*iter, 'l');
+        ByteBuffer_Iterator iter_front_plus = ++iter;
+        ASSERT_EQ(*iter, 'x');
+        ASSERT_EQ(*iter_front_plus, 'x');
 
-    ByteBuffer_Iterator iter_back_des = iter--;
-    ASSERT_EQ(*iter_back_des, 'x');
-    ASSERT_EQ(*iter, 'l');
-    ByteBuffer_Iterator iter_front_des = --iter;
-    ASSERT_EQ(*iter, 'e');
-    ASSERT_EQ(*iter_front_des, 'e');
+        ByteBuffer_Iterator iter_back_des = iter--;
+        ASSERT_EQ(*iter_back_des, 'x');
+        ASSERT_EQ(*iter, 'l');
+        ByteBuffer_Iterator iter_front_des = --iter;
+        ASSERT_EQ(*iter, 'e');
+        ASSERT_EQ(*iter_front_des, 'e');
 
+        buff_plus.read_string(read_str);
+    }
 }
 
 #define RANDOM_RANGE 256)
