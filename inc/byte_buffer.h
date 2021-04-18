@@ -150,6 +150,7 @@ public:
     int8_t operator*();
     ByteBuffer_Iterator operator+(BUFSIZE_T inc);
     ByteBuffer_Iterator operator-(int des);
+    // 求出两个迭代器之间的距离绝对值
     BUFSIZE_T operator-(ByteBuffer_Iterator &rhs);
 
     // 前置++

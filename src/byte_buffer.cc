@@ -942,17 +942,15 @@ ByteBuffer_Iterator::operator-(ByteBuffer_Iterator &rhs)
     }
 
     BUFSIZE_T max_size = buff_->max_buffer_size_;
-
     BUFSIZE_T start = this->buff_->start_read_pos_;
-    BUFSIZE_T tail = this->buff_->start_write_pos_;
 
     BUFSIZE_T right_postion = (rhs.curr_pos_ < this->curr_pos_ ? this->curr_pos_ : rhs.curr_pos_);
     BUFSIZE_T left_postion = (right_postion == rhs.curr_pos_ ? this->curr_pos_ : rhs.curr_pos_);
 
     BUFSIZE_T diff = right_postion - left_postion;
 
-    if (start >= tail) {
-        return max_size - diff + 1;
+    if (left_postion < start) {
+        return max_size - diff;
     }
     
     return diff;

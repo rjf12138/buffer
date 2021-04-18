@@ -484,50 +484,10 @@ TEST_F(ByteBuffer_Test, iterator)
         buff.read_string(read_str);
     }
 
-    // 测试加/减法
-    buff.clear();
-    ByteBuffer_Iterator iter1, iter2;
-
-    for (int i = 0; i < 3600; ++i) {
-        buff.write_string(str);
-        iter1 = buff.begin();
-        iter2 = buff.end();
-        for (int i = buff.data_size(); i > 0; --i) {
-            auto tmp_iter1 = iter2 - i;
-            auto tmp_iter2 = iter1 + (buff.data_size() - i);
-            ASSERT_EQ(*tmp_iter1, *tmp_iter2);
-            ASSERT_EQ(str[buff.data_size() - i], *tmp_iter1);
-        }
-        buff.read_string(read_str);
-    }
-
-    // 测试两个位置距离
-    buff.clear();
-
-    for (int i = 0; i < 3600; ++i) {
-        cout << "i： " << i << endl; 
-        buff.write_string(str);
-        iter1 = buff.begin();
-        iter2 = buff.end();
-        for (int i = buff.data_size(); i > 0; --i) {
-            BUFSIZE_T dis = iter2 - iter1;
-            ++iter1;
-            ASSERT_EQ(dis, i);
-        }
-
-        iter1 = buff.begin();
-        iter2 = buff.end();
-        for (int i = buff.data_size(); i > 0; --i) {
-            BUFSIZE_T dis = iter2 - iter1;
-            --iter2;
-            ASSERT_EQ(dis, i);
-        }
-        buff.read_string(read_str);
-    }
-
     // 测试判等
     bool throw_error = false;
     ByteBuffer buff1, buff2;
+    ByteBuffer_Iterator iter1, iter2;
 
     iter1 = buff1.begin();
     iter2 = buff2.begin();
@@ -570,6 +530,49 @@ TEST_F(ByteBuffer_Test, iterator)
         ASSERT_EQ(*iter_front_des, 'e');
 
         buff_plus.read_string(read_str);
+    }
+
+    // 测试加/减法
+    buff.clear();
+
+    for (int i = 0; i < 3600; ++i) {
+        buff.write_string(str);
+        iter1 = buff.begin();
+        iter2 = buff.end();
+        for (int i = buff.data_size(); i > 0; --i) {
+            auto tmp_iter1 = iter2 - i;
+            auto tmp_iter2 = iter1 + (buff.data_size() - i);
+            ASSERT_EQ(*tmp_iter1, *tmp_iter2);
+            ASSERT_EQ(str[buff.data_size() - i], *tmp_iter1);
+        }
+        buff.read_string(read_str);
+    }
+
+    // 测试两个位置距离
+    buff.clear();
+
+    for (int j = 0; j < 3600; ++j) {
+        buff.write_string(str);
+        iter1 = buff.begin();
+        iter2 = buff.end();
+        for (int i = buff.data_size(); i > 0; --i) {
+            BUFSIZE_T dis1 = iter2 - iter1;
+            BUFSIZE_T dis2 = iter1 - iter2;
+            ++iter1;
+            ASSERT_EQ(dis1, i);
+            ASSERT_EQ(dis1, dis2);
+        }
+
+        iter1 = buff.begin();
+        iter2 = buff.end();
+        for (int i = buff.data_size(); i > 0; --i) {
+            BUFSIZE_T dis1 = iter2 - iter1;
+            BUFSIZE_T dis2 = iter1 - iter2;
+            --iter2;
+            ASSERT_EQ(dis1, i);
+            ASSERT_EQ(dis1, dis2);
+        }
+        buff.read_string(read_str);
     }
 }
 
