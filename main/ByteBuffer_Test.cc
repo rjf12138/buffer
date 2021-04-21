@@ -140,6 +140,24 @@ TEST_F(ByteBuffer_Test, ByteBuff_none_lock_read_write)
         ASSERT_EQ(strcmp(val_stru.str, stru.str), 0);
         ASSERT_EQ(strcmp(val_stru.buf, stru.buf), 0);
     }
+
+    char read_buf[4] = {'\0'};
+    str = "Nice to meet you";
+    for (int i = 0; i < test_cnt; ++i) {
+        buff.write_bytes(str.c_str(), str.length(), str.length());
+        
+        for (std::size_t k = 1; k < 4; ++k) {
+            for (std::size_t j = 1; j < str.length(); ++j) {
+                BUFSIZE_T ret = buff.read_only(j, read_buf, k);
+                ASSERT_EQ(static_cast<size_t>(ret), strlen(read_buf));
+                ASSERT_EQ(memcmp(str.c_str() + j, read_buf, ret), 0);
+                memset(read_buf, 0, 4);
+            }
+        }
+
+        string tmpstr;
+        buff.read_string(tmpstr);
+    }
 }
 
 // 测试 buffer 空间增长，压力测试
@@ -707,58 +725,19 @@ TEST_F(ByteBuffer_Test, operate_buffer)
 
         }
     }
-
-    // string pattern = "a", data = "ababacastababacad::vecababacatoababacar<ByteBuffeababacar_Iteraababacator>ababacaabdddd";
-    // vector<int> out;
-    // ByteBuffer buff, patten;
-
-    // patten.write_string(pattern);
-    // patten.kmp_compute_prefix(out);
-    // for (std::size_t i = 0; i < out.size(); ++i) {
-    //     cout << out[i] << " ";
-    // }
-    // cout << endl;
-    // buff.write_string(data);
-    // vector<ByteBuffer_Iterator> res = buff.find(patten);
-    // for (std::size_t i = 0; i < res.size(); ++i) {
-    //     std::cout << *res[i] << std::endl;
-    // }
-    // cout << endl << "======== split ========" << endl;
-
-    // string str;
-    // vector<ByteBuffer> ret = buff.split(patten);
-    // cout << "size: " << ret.size() << endl;
-    // for (std::size_t i = 0;i < ret.size(); ++i) {
-    //     ret[i].read_string(str);
-    //     std::cout << str << std::endl;
-    // }
-
-    // patten.clear();
-    // patten.write_string("ab");
-    // ByteBuffer result = buff.remove(patten);
-    // result.read_string(str);
-    // std::cout << str << std::endl;
-
-    // result = buff.remove(patten, 1);
-    // result.read_string(str);
-    // std::cout << str << std::endl;
-    
-    // result = buff.remove(patten, 3);
-    // result.read_string(str);
-    // std::cout << str << std::endl;
-
-
     // 正则表达式测试
-    // buff.clear();
-    // patten.clear();
-    // patten.write_string("<(.*)>(.*)</(\\1)>");
-    // buff.write_string("123<xml>value</xml>456<widget>center</widget>hahaha<vertical>window</vertical>the end");
+    ByteBuffer buff, patten;
 
-    // ret = buff.match(patten);
-    // ASSERT_EQ(ret.size(), 3);
-    // ASSERT_EQ(ret[0].str(), std::string("<xml>value</xml>"));
-    // ASSERT_EQ(ret[1].str(), std::string("<widget>center</widget>"));
-    // ASSERT_EQ(ret[2].str(), std::string("<vertical>window</vertical>"));
+    buff.clear();
+    patten.clear();
+    patten.write_string("<(.*)>(.*)</(\\1)>");
+    buff.write_string("123<xml>value</xml>456<widget>center</widget>hahaha<vertical>window</vertical>the end");
+
+    auto ret = buff.match(patten);
+    ASSERT_EQ(ret.size(), static_cast<std::size_t>(3));
+    ASSERT_EQ(ret[0].str(), std::string("<xml>value</xml>"));
+    ASSERT_EQ(ret[1].str(), std::string("<widget>center</widget>"));
+    ASSERT_EQ(ret[2].str(), std::string("<vertical>window</vertical>"));
 }
 
 }  // namespace

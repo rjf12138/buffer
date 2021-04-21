@@ -227,10 +227,10 @@ BUFSIZE_T ByteBuffer::copy_data_to_buffer(const void *data, BUFSIZE_T size)
         }
     }
 
-    if (this->idle_size() < size) {
-        fprintf(stderr, "ByteBuffer remain idle space(%ld) is less than size(%ld)!\n", this->idle_size(), size);
-        return 0;
-    }
+    // if (this->idle_size() < size) {
+    //     fprintf(stderr, "ByteBuffer remain idle space(%ld) is less than size(%ld)!\n", this->idle_size(), size);
+    //     return 0;
+    // }
 
     BUFSIZE_T copy_size = size;
     BUFFER_PTR data_ptr = (BUFFER_PTR)data;
@@ -259,10 +259,10 @@ BUFSIZE_T ByteBuffer::copy_data_from_buffer(void *data, BUFSIZE_T size)
         return 0;
     }
    
-    if (this->data_size() < size) {
-        fprintf(stderr, "ByteBuffer remain data(%ld) is less than size(%ld)!\n", this->data_size(), size);
-        return 0;
-    }
+    // if (this->data_size() < size) {
+    //     fprintf(stderr, "ByteBuffer remain data(%ld) is less than size(%ld)!\n", this->data_size(), size);
+    //     return 0;
+    // }
 
     BUFSIZE_T copy_size = size;
     BUFFER_PTR data_ptr = (BUFFER_PTR)data;
@@ -340,6 +340,31 @@ ByteBuffer::read_bytes(void *buf, BUFSIZE_T buf_size, bool match)
     }
 
     return this->copy_data_from_buffer(buf, buf_size);
+}
+
+BUFSIZE_T 
+ByteBuffer::read_only(BUFSIZE_T start_pos, void *buf, BUFSIZE_T buf_size, bool match)
+{
+    if (buf == nullptr) {
+        return 0;
+    }
+
+    BUFSIZE_T old_read_pos = this->start_read_pos_;
+    BUFSIZE_T old_data_size = this->used_data_size_;
+    BUFSIZE_T old_free_size = this->free_data_size_;
+
+    BUFSIZE_T ret = this->update_read_pos(start_pos);
+    if (ret == -1) {
+        return 0;
+    }
+    
+    ret = this->copy_data_from_buffer(buf, buf_size);
+
+    this->start_read_pos_ = old_read_pos;
+    this->used_data_size_ = old_data_size;
+    this->free_data_size_ = old_free_size;
+
+    return ret;
 }
 
 std::string 
@@ -633,32 +658,32 @@ ByteBuffer::get_cont_read_size(void) const
     return 0;
 }
 
-void 
+BUFSIZE_T 
 ByteBuffer::update_write_pos(BUFSIZE_T offset)
 {
     if (offset <= 0 || offset > free_data_size_) {
-        return ;
+        return -1;
     }
 
     used_data_size_ += offset;
     free_data_size_ -= offset;
     start_write_pos_ = (start_write_pos_ + offset) % max_buffer_size_;
 
-    return ;
+    return 0;
 }
 
-void 
+BUFSIZE_T 
 ByteBuffer::update_read_pos(BUFSIZE_T offset)
 {
     if (offset <= 0 || offset > used_data_size_) {
-        return ;
+        return -1;
     }
 
     used_data_size_ -= offset;
     free_data_size_ += offset;
     start_read_pos_ = (start_read_pos_ + offset) % max_buffer_size_;
 
-    return ;
+    return 0;
 }
 
 ///////////////////////////// 操作 ByteBuffer /////////////////////////////

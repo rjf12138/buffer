@@ -23,13 +23,18 @@ public:
     ByteBuffer(const BUFFER_PTR data, BUFSIZE_T size);
     virtual ~ByteBuffer();
 
+    // 将ByteBuffer中数据以字符串形式返回
+    std::string str();
+
     BUFSIZE_T read_int8(int8_t &val);
     BUFSIZE_T read_int16(int16_t &val);
     BUFSIZE_T read_int32(int32_t &val);
     BUFSIZE_T read_int64(int64_t &val);
     BUFSIZE_T read_string(string &str, BUFSIZE_T str_size = -1);
     BUFSIZE_T read_bytes(void *buf, BUFSIZE_T buf_size, bool match = false);
-    std::string str();
+
+    // 只读不修改读位置
+    BUFSIZE_T read_only(BUFSIZE_T start_pos, void *buf, BUFSIZE_T buf_size, bool match = false);
 
     BUFSIZE_T write_int8(int8_t val);
     BUFSIZE_T write_int16(int16_t val);
@@ -87,8 +92,8 @@ public:
     BUFSIZE_T get_cont_read_size(void) const;
 
     // 更新读写数据和剩余的缓冲大小
-    void update_write_pos(BUFSIZE_T offset);
-    void update_read_pos(BUFSIZE_T offset);
+    BUFSIZE_T update_write_pos(BUFSIZE_T offset);
+    BUFSIZE_T update_read_pos(BUFSIZE_T offset);
 
     // ===================== 操作ByteBuffer ======================
     // 返回 ByteBuffer 中所有匹配 buff 的迭代器
