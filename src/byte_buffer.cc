@@ -661,7 +661,7 @@ ByteBuffer::get_cont_read_size(void) const
 BUFSIZE_T 
 ByteBuffer::update_write_pos(BUFSIZE_T offset)
 {
-    if (offset <= 0 || offset > free_data_size_) {
+    if (offset < 0 || offset > free_data_size_) {
         return -1;
     }
 
@@ -675,7 +675,7 @@ ByteBuffer::update_write_pos(BUFSIZE_T offset)
 BUFSIZE_T 
 ByteBuffer::update_read_pos(BUFSIZE_T offset)
 {
-    if (offset <= 0 || offset > used_data_size_) {
+    if (offset < 0 || offset > used_data_size_) {
         return -1;
     }
 
